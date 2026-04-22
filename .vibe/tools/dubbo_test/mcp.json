@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "miapi-mcp": {
+      "type": "streamableHttp",
+      "description": "miapi staging环境mcp",
+      "url": "http://one.mi.com/hubs-server/mcp/streamableHttp/miapi",
+      "headers": {
+        "X-API-Token": "077c13780bd604934549a78bdf009289ef911c2bd3aa177fcf1e23126bb5dcbf"
+      }
+    }
+  }
+}

@@ -1,0 +1,3573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature 产物总览</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --primary: #4f46e5; --primary-light: #eef2ff; --primary-hover: #4338ca;
+      --success: #10b981; --success-light: #ecfdf5;
+      --warning: #f59e0b; --warning-light: #fffbeb;
+      --error: #ef4444; --error-light: #fef2f2;
+      --info: #06b6d4; --info-light: #ecfeff;
+      --purple: #8b5cf6; --purple-light: #f5f3ff;
+      --pink: #ec4899; --pink-light: #fdf2f8;
+      --g50: #f8fafc; --g100: #f1f5f9; --g200: #e2e8f0; --g300: #cbd5e1;
+      --g400: #94a3b8; --g500: #64748b; --g600: #475569; --g700: #334155;
+      --g800: #1e293b; --g900: #0f172a;
+      --radius: 10px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; width: 100%; overflow: hidden; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--g100);
+      color: var(--g800);
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .app-container {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* 顶部导航 */
+    .top-nav {
+      background: linear-gradient(135deg, #312e81 0%, #4f46e5 50%, #7c3aed 100%);
+      color: #fff;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      height: 52px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(79,70,229,0.25);
+      position: relative;
+      z-index: 10;
+    }
+    
+    .top-nav.p-phase {
+      background: linear-gradient(135deg, #312e81 0%, #4f46e5 50%, #7c3aed 100%);
+      box-shadow: 0 4px 12px rgba(79,70,229,0.25);
+    }
+    
+    .nav-badge {
+      margin-left: 12px;
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.95);
+      background: rgba(255,255,255,0.12);
+      padding: 5px 14px;
+      border-radius: 20px;
+      white-space: nowrap;
+      backdrop-filter: blur(8px);
+      letter-spacing: 0.5px;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .nav-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-right: 28px;
+      letter-spacing: -0.3px;
+      white-space: nowrap;
+    }
+    
+    .nav-title::before { content: "📦"; margin-right: 8px; }
+    
+    .nav-tabs {
+      display: flex;
+      gap: 1px;
+      height: 100%;
+      overflow-x: auto;
+      flex: 1;
+      min-width: 0;
+    }
+    .nav-tabs::-webkit-scrollbar { height: 0; }
+    
+    .nav-tab {
+      padding: 0 12px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    
+    .nav-tab:hover {
+      color: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.06);
+    }
+    
+    .nav-tab.active {
+      color: #fff;
+      background: rgba(255,255,255,0.1);
+      border-bottom-color: #fff;
+    }
+    
+    .nav-tab .tab-icon { margin-right: 6px; font-size: 14px; }
+    
+    .nav-tab.approved { border-top: 2px solid #34d399; }
+    .nav-tab.in-progress { border-top: 2px solid #fbbf24; }
+    .nav-tab.not-started { border-top: 2px solid rgba(255,255,255,0.2); }
+    
+    .nav-info {
+      margin-left: auto;
+      font-size: 11px;
+      opacity: 0.5;
+      white-space: nowrap;
+    }
+    
+    /* 主内容区 */
+    .main-container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    
+    .tab-content {
+      display: none;
+      flex: 1;
+      overflow: hidden;
+    }
+    
+    .tab-content.active { display: flex; }
+    
+    /* 侧边栏 */
+    .sidebar {
+      width: 280px;
+      background: #fff;
+      border-right: 1px solid var(--g200);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--g100);
+      background: var(--g50);
+    }
+    
+    .sidebar-header h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--g800);
+      margin-bottom: 8px;
+      letter-spacing: -0.2px;
+    }
+    
+    .sidebar-stats {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    
+    .stat-item {
+      padding: 3px 10px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 500;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    
+    .stat-item.success { background: var(--success-light); color: var(--success); }
+    .stat-item.warning { background: var(--warning-light); color: var(--warning); }
+    
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+    
+    /* 树形列表 */
+    .tree-group { margin-bottom: 2px; }
+    
+    .tree-group-header {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+      user-select: none;
+    }
+    
+    .tree-group-header:hover { background: var(--g50); }
+    
+    .tree-group-header .arrow {
+      width: 16px;
+      font-size: 10px;
+      color: var(--g400);
+      transition: transform 0.2s;
+    }
+    
+    .tree-group-header.expanded .arrow { transform: rotate(90deg); }
+    
+    .tree-group-header .icon { margin-right: 8px; font-size: 14px; }
+    
+    .tree-group-header .name {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--g700);
+    }
+    
+    .tree-group-header .count {
+      padding: 1px 7px;
+      background: var(--g100);
+      border-radius: 10px;
+      font-size: 10px;
+      color: var(--g400);
+      font-weight: 500;
+    }
+    
+    .tree-group-children {
+      display: none;
+      padding-left: 16px;
+    }
+    
+    .tree-group.expanded > .tree-group-children { display: block; }
+    
+    .tree-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .tree-item:hover { background: var(--primary-light); }
+    
+    .tree-item.active {
+      background: var(--primary-light);
+      border-left: 2px solid var(--primary);
+    }
+    
+    .tree-item .item-icon { margin-right: 8px; font-size: 12px; }
+    
+    .tree-item .item-name {
+      flex: 1;
+      font-size: 12px;
+      color: var(--g600);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .tree-item.active .item-name {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    
+    .file-tag {
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-left: 6px;
+      flex-shrink: 0;
+    }
+    
+    .file-tag.md { background: var(--primary-light); color: var(--primary); }
+    .file-tag.sql { background: var(--success-light); color: var(--success); }
+    .file-tag.http { background: var(--warning-light); color: #d97706; }
+    .file-tag.sh { background: var(--purple-light); color: var(--purple); }
+    .file-tag.toon { background: var(--pink-light); color: var(--pink); }
+    .file-tag.json { background: var(--info-light); color: var(--info); }
+    
+    /* 内容区 */
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--g100);
+    }
+    
+    .content-header {
+      background: #fff;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--g200);
+    }
+    
+    .content-breadcrumb {
+      font-size: 11px;
+      color: var(--g400);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+    }
+    
+    .content-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--g900);
+      letter-spacing: -0.3px;
+    }
+    
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    
+    /* 卡片样式 */
+    .card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--g200);
+    }
+    
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--g800);
+      letter-spacing: -0.2px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--g100);
+      display: flex;
+      align-items: center;
+    }
+    
+    .card-title .icon { margin-right: 8px; }
+    
+    /* Markdown 渲染样式 */
+    .markdown-body { line-height: 1.75; font-size: 14px; color: var(--g700); }
+    .markdown-body h1 { font-size: 24px; margin: 24px 0 14px; color: var(--g900); font-weight: 800; letter-spacing: -0.5px; }
+    .markdown-body h2 { font-size: 18px; margin: 20px 0 10px; border-bottom: 2px solid var(--g100); padding-bottom: 8px; color: var(--g800); font-weight: 700; }
+    .markdown-body h3 { font-size: 15px; margin: 14px 0 8px; }
+    .markdown-body h4 { font-size: 14px; margin: 12px 0 6px; }
+    .markdown-body p { margin: 10px 0; }
+    .markdown-body ul, .markdown-body ol { margin: 10px 0; padding-left: 20px; }
+    .markdown-body li { margin: 4px 0; }
+    .markdown-body code { background: var(--g100); padding: 2px 6px; border-radius: 4px; font-family: 'SF Mono', Monaco, monospace; font-size: 12px; color: var(--primary); }
+    .markdown-body pre { background: var(--g900); padding: 16px; border-radius: 8px; overflow-x: auto; }
+    .markdown-body pre code { background: none; padding: 0; color: #e2e8f0; }
+    .markdown-body table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12px; }
+    .markdown-body th, .markdown-body td { border: 1px solid var(--g200); padding: 8px 12px; }
+    .markdown-body th { background: var(--g50); color: var(--g600); font-weight: 600; }
+    .markdown-body blockquote { border-left: 3px solid var(--primary); padding: 12px 16px; margin: 14px 0; color: var(--g600); background: var(--primary-light); border-radius: 0 8px 8px 0; }
+    .markdown-body img { max-width: 100%; border-radius: 4px; }
+    .markdown-body hr { border: none; border-top: 1px solid #e8e8e8; margin: 20px 0; }
+    .markdown-body .mermaid-wrapper { margin: 16px 0; }
+    .markdown-body .mermaid { background: #fafafa; border-radius: 8px; padding: 20px; overflow-x: auto; }
+    .markdown-body .mermaid svg { max-width: 100%; height: auto; }
+    .markdown-body .mermaid-fallback { background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 8px; padding: 16px; margin: 0; overflow-x: auto; }
+    .markdown-body .mermaid-fallback code { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 13px; line-height: 1.5; white-space: pre; color: #24292e; }
+    
+    /* 可筛选表格样式 */
+    .filterable-table-wrapper { margin: 16px 0; }
+    .table-filter-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+    .table-filter-input {
+      padding: 6px 10px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 12px;
+      min-width: 120px;
+      outline: none;
+    }
+    .table-filter-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+    .table-filter-label { font-size: 12px; color: #8c8c8c; }
+    .table-filter-clear {
+      padding: 4px 10px;
+      background: #f5f5f5;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      color: #595959;
+    }
+    .table-filter-clear:hover { background: #e8e8e8; }
+    .table-row-hidden { display: none; }
+    .table-filter-count { font-size: 11px; color: #8c8c8c; margin-left: auto; }
+    
+    /* 空状态 */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #bfbfbf;
+    }
+    
+    .empty-state .icon { font-size: 56px; margin-bottom: 14px; }
+    .empty-state .text { font-size: 14px; }
+    
+    /* 文档大纲样式 */
+    .doc-outline {
+      background: #fafafa;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      border: 1px solid #f0f0f0;
+    }
+    .doc-outline-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #8c8c8c;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .doc-outline-title::before { content: "📑"; margin-right: 6px; }
+    .doc-outline-title .toggle { margin-left: auto; font-size: 10px; color: #bfbfbf; }
+    .doc-outline-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .doc-outline-list.collapsed { display: none; }
+    .doc-outline-item {
+      padding: 4px 0;
+      font-size: 12px;
+      color: #595959;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: color 0.2s;
+    }
+    .doc-outline-item:hover { color: #1890ff; }
+    .doc-outline-item.level-1 { padding-left: 0; font-weight: 500; }
+    .doc-outline-item.level-2 { padding-left: 12px; }
+    .doc-outline-item.level-3 { padding-left: 24px; font-size: 11px; }
+    .doc-outline-item.level-4 { padding-left: 36px; font-size: 11px; color: #8c8c8c; }
+    .doc-outline-item::before {
+      content: "•";
+      margin-right: 6px;
+      color: #d9d9d9;
+    }
+    .doc-outline-item.level-1::before { content: "▸"; color: #1890ff; }
+    .doc-outline-item.level-2::before { content: "◦"; }
+    
+    /* Front Matter 元数据样式 */
+    .front-matter {
+      background: linear-gradient(135deg, #f6f8fa 0%, #eef1f5 100%);
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+    .front-matter-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #586069;
+      margin-bottom: 8px;
+    }
+    .front-matter-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .front-matter-item {
+      display: inline-flex;
+      align-items: center;
+      background: #fff;
+      border: 1px solid #e1e4e8;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+    .fm-key {
+      color: #6a737d;
+      margin-right: 6px;
+    }
+    .fm-key::after { content: ":"; }
+    .fm-value {
+      color: #24292e;
+      font-weight: 500;
+    }
+    
+    /* 加载状态 */
+    .loading {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #8c8c8c;
+    }
+    
+    .loading .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid #f0f0f0;
+      border-top-color: #1890ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 14px;
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* 代码预览样式 */
+    .code-preview {
+      background: #1e1e1e;
+      border-radius: 6px;
+      padding: 16px;
+      overflow-x: auto;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #d4d4d4;
+    }
+    
+    /* TOON 格式样式 */
+    .toon-container { font-size: 13px; }
+    .toon-header {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+      color: #fff;
+      padding: 16px 20px;
+      border-radius: 8px 8px 0 0;
+      margin-bottom: 0;
+    }
+    .toon-header h3 { margin: 0 0 8px; font-size: 16px; }
+    .toon-header .toon-meta { font-size: 11px; opacity: 0.85; }
+    .toon-header .toon-meta span { margin-right: 16px; }
+    .toon-section {
+      background: #fff;
+      border: 1px solid var(--g200);
+      border-top: none;
+      margin-bottom: 0;
+    }
+    .toon-section:last-child { border-radius: 0 0 8px 8px; }
+    .toon-section-title {
+      background: var(--g50);
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--g800);
+      border-bottom: 1px solid var(--g100);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      user-select: none;
+    }
+    .toon-section-title:hover { background: var(--g100); }
+    .toon-section-title::before {
+      content: "▶";
+      font-size: 10px;
+      margin-right: 10px;
+      color: #8c8c8c;
+      transition: transform 0.2s;
+    }
+    .toon-section.expanded .toon-section-title::before { transform: rotate(90deg); }
+    .toon-section-title .badge {
+      margin-left: auto;
+      padding: 2px 8px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: normal;
+    }
+    .toon-section-content {
+      display: none;
+      padding: 16px 20px;
+    }
+    .toon-section.expanded .toon-section-content { display: block; }
+    .toon-kv { display: flex; padding: 6px 0; border-bottom: 1px dashed #f0f0f0; }
+    .toon-kv:last-child { border-bottom: none; }
+    .toon-kv-key { color: #8c8c8c; min-width: 180px; font-size: 12px; }
+    .toon-kv-value { color: #262626; font-size: 12px; }
+    .toon-nested-block { margin: 12px 0; background: #f8f9fa; border-radius: 8px; overflow: hidden; }
+    .toon-nested-title { background: #e8f4fd; color: #1890ff; padding: 10px 14px; font-weight: 500; font-size: 13px; }
+    .toon-nested-content { margin: 0; padding: 14px; font-size: 12px; line-height: 1.6; background: #f8f9fa; overflow-x: auto; white-space: pre; }
+    .toon-nested-content code { font-family: 'SF Mono', Monaco, 'Courier New', monospace; color: #24292e; }
+    .toon-list { margin: 0; padding: 0; list-style: none; }
+    .toon-list-item {
+      background: #fafafa;
+      border: 1px solid #f0f0f0;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .toon-list-item:last-child { margin-bottom: 0; }
+    .toon-list-item-header {
+      font-weight: 600;
+      color: #262626;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toon-list-item-header .id-badge {
+      background: var(--primary);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    .toon-list-item-header .name { flex: 1; }
+    .toon-list-item-body { font-size: 12px; }
+    .toon-list-item-body .toon-kv-key { min-width: 140px; }
+    .toon-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      margin-left: 4px;
+    }
+    .toon-tag.success { background: var(--success-light); color: var(--success); }
+    .toon-tag.warning { background: var(--warning-light); color: var(--warning); }
+    .toon-tag.error { background: var(--error-light); color: var(--error); }
+    .toon-tag.info { background: var(--info-light); color: var(--info); }
+    .toon-tag.purple { background: var(--purple-light); color: var(--purple); }
+    .toon-methods { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e8e8e8; }
+    .toon-methods-title { font-size: 11px; color: #8c8c8c; margin-bottom: 6px; }
+    .toon-method {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 4px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+    .toon-method:last-child { margin-bottom: 0; }
+    .toon-method-name { font-weight: 600; color: #1890ff; font-family: monospace; }
+    .toon-method-meta { color: #8c8c8c; margin-top: 4px; }
+    .toon-comment { color: #8c8c8c; font-style: italic; padding: 4px 0; font-size: 12px; }
+    
+    /* TOON YAML 列表样式 */
+    .toon-yaml-list { margin-bottom: 16px; }
+    .toon-yaml-list-title {
+      font-weight: 600;
+      font-size: 13px;
+      color: #262626;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toon-simple-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .toon-simple-list-item {
+      background: #f8f9fa;
+      border-left: 3px solid #1890ff;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      border-radius: 0 6px 6px 0;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #262626;
+    }
+    .toon-simple-list-item:last-child { margin-bottom: 0; }
+    
+    /* TOON 表格样式 */
+    .toon-table-wrapper { margin-bottom: 16px; }
+    .toon-table-title {
+      font-weight: 600;
+      font-size: 13px;
+      color: #262626;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toon-table-title .badge {
+      padding: 2px 8px;
+      background: #e6f7ff;
+      color: #1890ff;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: normal;
+    }
+    .toon-table-scroll { overflow-x: auto; }
+    .toon-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+    }
+    .toon-table th {
+      background: #fafafa;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #595959;
+      border-bottom: 1px solid #e8e8e8;
+      white-space: nowrap;
+    }
+    .toon-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #262626;
+      vertical-align: top;
+    }
+    .toon-table tbody tr:hover { background: #fafafa; }
+    .toon-table tbody tr:last-child td { border-bottom: none; }
+    .toon-code-path {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      color: #595959;
+      word-break: break-all;
+    }
+    .toon-code-class {
+      color: #722ed1;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .toon-code-method {
+      background: #f0f5ff;
+      color: #2f54eb;
+      padding: 1px 4px;
+      border-radius: 2px;
+      font-size: 11px;
+      margin-right: 4px;
+    }
+    .toon-type-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .toon-methods-compact {
+      color: #595959;
+      font-size: 11px;
+    }
+    .toon-methods-compact .badge {
+      background: #f0f0f0;
+      color: #8c8c8c;
+      padding: 1px 5px;
+      border-radius: 8px;
+      font-size: 10px;
+      margin-left: 4px;
+    }
+    .toon-subsection-title {
+      font-weight: 600;
+      font-size: 13px;
+      color: #1890ff;
+      margin: 16px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    .toon-empty {
+      color: #bfbfbf;
+      font-size: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+    
+    /* 资产对比查看器样式 */
+    .asset-viewer-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px);
+      z-index: 9999; display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden; transition: all 0.3s ease;
+    }
+    .asset-viewer-overlay.active { opacity: 1; visibility: visible; }
+    .asset-viewer-modal {
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      width: 95%; max-width: 1600px; height: 90vh;
+      display: flex; flex-direction: column;
+      transform: scale(0.95) translateY(20px); transition: transform 0.3s ease; overflow: hidden;
+    }
+    .asset-viewer-overlay.active .asset-viewer-modal { transform: scale(1) translateY(0); }
+    .asset-viewer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; border-bottom: 1px solid #e2e8f0;
+      background: linear-gradient(180deg, #f8fafc 0%, #fff 100%); flex-shrink: 0;
+    }
+    .asset-viewer-title { display: flex; align-items: center; gap: 12px; font-weight: 700; color: #1e293b; }
+    .asset-viewer-title .title-icon {
+      width: 32px; height: 32px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .asset-viewer-title .title-text { display: flex; flex-direction: column; gap: 2px; }
+    .asset-viewer-title .title-main { font-size: 14px; font-weight: 600; }
+    .asset-viewer-title .title-sub { font-size: 11px; color: #64748b; font-family: monospace; }
+    .asset-viewer-btn {
+      padding: 8px 14px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+    }
+    .asset-viewer-btn.close { background: transparent; color: #94a3b8; padding: 8px; border-radius: 50%; width: 32px; height: 32px; }
+    .asset-viewer-btn.close:hover { background: #fee2e2; color: #ef4444; }
+    .asset-viewer-body { flex: 1; display: flex; overflow: hidden; background: #f1f5f9; }
+    .asset-viewer-left, .asset-viewer-right { flex: 1; display: flex; flex-direction: column; background: #fff; min-width: 0; }
+    .asset-viewer-left { border-right: 1px solid #e2e8f0; }
+    .asset-viewer-panel-header {
+      padding: 12px 16px; border-bottom: 1px solid #f1f5f9; background: #f8fafc;
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .asset-viewer-panel-header .panel-title { font-size: 13px; font-weight: 600; color: #1e293b; }
+    .asset-viewer-panel-header .panel-badge {
+      margin-left: auto; padding: 2px 8px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      color: #1d4ed8; border-radius: 10px; font-size: 10px; font-weight: 600;
+    }
+    .asset-viewer-image-container {
+      flex: 1; overflow: auto; padding: 20px; display: flex; align-items: flex-start; justify-content: center;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    .asset-viewer-image-container img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    .asset-viewer-image-container .image-placeholder { display: flex; flex-direction: column; align-items: center; padding: 60px; color: #94a3b8; }
+    .asset-viewer-image-container .placeholder-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    .asset-viewer-md-container { flex: 1; overflow: auto; padding: 24px; }
+    .asset-viewer-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; color: #94a3b8; height: 100%; }
+    .asset-viewer-loading .spinner { width: 36px; height: 36px; border: 3px solid #e2e8f0; border-top-color: #6366f1; border-radius: 50%; animation: asset-spin 0.8s linear infinite; margin-bottom: 12px; }
+    @keyframes asset-spin { to { transform: rotate(360deg); } }
+    .asset-viewer-error { display: flex; flex-direction: column; align-items: center; padding: 40px; color: #ef4444; text-align: center; }
+    @media (max-width: 1024px) {
+      .asset-viewer-body { flex-direction: column; }
+      .asset-viewer-left { border-right: none; border-bottom: 1px solid #e2e8f0; max-height: 40vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <nav class="top-nav" id="top-nav">
+      <div class="nav-title" id="nav-title">Feature 产物总览</div>
+      <div class="nav-tabs" id="nav-tabs"></div>
+      <div class="nav-info" id="nav-info"></div>
+      <div class="nav-badge">⚡ 集团信息技术部 出品</div>
+    </nav>
+    <div class="main-container" id="main-container"></div>
+  </div>
+
+  <script>
+    // ==================== 配置区域 ====================
+    // 可通过外部 viewer_config.json 覆盖，或直接修改此处
+    
+    // P阶段配置（需求Hub）
+    const P_PHASES_CONFIG = {
+      'p01': {
+        id: 'p01', name: 'P01 需求收集', icon: '📥',
+        dir: 'P01_req_intake',
+        groups: [
+          {
+            name: '原始导出', icon: '📤',
+            scanDir: 'source_export',
+            scanPattern: '[PRD]*.md,*_comments.md,download_report*.md',
+            scanFromPRD: true,
+            subgroups: [
+              {
+                name: '图片资源', icon: '🖼️',
+                scanDir: 'source_export/static',
+                scanPattern: '*.png,*.jpg,*.jpeg,*.gif,*.webp',
+                scanImages: true
+              }
+            ]
+          },
+          {
+            name: '资产解析', icon: '🖼️',
+            scanDir: 'assets_analysis',
+            scanPattern: '*.md',
+            indexFile: 'assets_summary.md'
+          },
+          {
+            name: 'PRD文档', icon: '📄', noGroup: true,
+            files: [
+              { id: 'assets_summary', name: '资产汇总', path: 'assets_summary.md', type: 'md' },
+              { id: 'prd', name: 'PRD原文', path: 'PRD.md', type: 'md' },
+              { id: 'metadata', name: '元数据', path: 'metadata.json', type: 'json' }
+            ]
+          }
+        ]
+      },
+      'p02': {
+        id: 'p02', name: 'P02 上下文分析', icon: '🔍',
+        dir: 'P02_context_analysis',
+        downloadOnly: true,
+        downloadHint: 'P02仅导入知识库，前往本地目录查看。',
+        groups: []
+      },
+      'p03': {
+        id: 'p03', name: 'P03 PRD评审', icon: '✅',
+        dir: 'P03_prd_review',
+        groups: [
+          {
+            name: '产出文件', icon: '📄', noGroup: true,
+            files: [
+              { id: 'prd_std', name: '标准化PRD', path: 'PRD_standardized.md', type: 'md' },
+              { id: 'atomic_toon', name: '原子功能(TOON)', path: 'atomic_functions.toon', type: 'toon' },
+              { id: 'prd_review', name: 'PRD评审报告', path: 'PRD_review_report.md', type: 'md' }
+            ]
+          }
+        ]
+      },
+      'p04': {
+        id: 'p04', name: 'P04 服务拆分', icon: '🔀',
+        dir: 'P04_service_split',
+        groups: [
+          {
+            name: '产出文件', icon: '📄', noGroup: true,
+            files: [
+              { id: 'split_decision', name: '服务拆分决策', path: 'service_split_decision.toon', type: 'toon' },
+              { id: 'exec_manifest', name: '执行清单', path: 'execution_manifest.json', type: 'json' }
+            ]
+          },
+          {
+            name: 'services', icon: '📂',
+            dynamicServices: true,
+            serviceFilesTemplate: [
+              { id: 'service_inputs', name: '服务输入', pathTemplate: 'services/{service}/service_inputs.toon', type: 'toon' }
+            ]
+          }
+        ]
+      },
+      'p05': {
+        id: 'p05', name: 'P05 初步设计', icon: '🔗',
+        dir: 'P05_preliminary_design',
+        groups: [
+          {
+            name: '产出文件', icon: '📄', noGroup: true,
+            files: [
+              { id: 'p05_split_decision', name: '服务拆分决策', path: 'service_split_decision.toon', type: 'toon' },
+              { id: 'p05_exec_manifest', name: '执行清单', path: 'execution_manifest.json', type: 'json' }
+            ]
+          },
+          {
+            name: 'services', icon: '📂',
+            dynamicServices: true,
+            serviceFilesTemplate: [
+              { id: 'service_inputs', name: '服务输入', pathTemplate: 'services/{service}/service_inputs.toon', type: 'toon' }
+            ]
+          }
+        ]
+      },
+      'p06-a': {
+        id: 'p06-a', name: 'P06-A 方案协调', icon: '📋',
+        dir: 'P06_coordination/P06_A_scheme_coordination',
+        groups: [
+          {
+            name: '评审文档', icon: '✅', noGroup: true,
+            files: [
+              { id: 'review_opinion', name: '评审意见', path: '../review_opinion.md', type: 'md' },
+              { id: 'review_approval', name: '评审批准', path: '../review_approval.md', type: 'md' }
+            ]
+          },
+          {
+            name: 'service_inputs', icon: '📂',
+            dynamicServices: true,
+            serviceFilesTemplate: [
+              { id: 'tech_design', name: '技术设计', pathTemplate: 'service_inputs/{service}/tech_design.md', type: 'md' },
+              { id: 'chapter_3_4', name: '第3、4章节', pathTemplate: 'service_inputs/{service}/chapter_3_4.md', type: 'md' },
+              { id: 'code_index', name: '代码索引', pathTemplate: 'service_inputs/{service}/code_index.toon', type: 'toon' }
+            ]
+          }
+        ]
+      },
+      'p06-b': {
+        id: 'p06-b', name: 'P06-B 测试协调', icon: '🧪',
+        dir: 'P06_coordination/P06_B_test_coordination',
+        groups: [
+          {
+            name: '协调文档', icon: '📄', noGroup: true,
+            files: [
+              { id: 'cross_test_plan', name: '跨服务测试计划', path: '../cross_service_test_plan.md', type: 'md' }
+            ]
+          },
+          {
+            name: 'service_inputs', icon: '📂',
+            dynamicServices: true,
+            serviceFilesTemplate: [
+              { id: 'integration_plan', name: '集成测试计划', pathTemplate: 'service_inputs/{service}/integration_plan.md', type: 'md' }
+            ],
+            serviceScanTemplate: {
+              scanDir: 'service_inputs/{service}/assets',
+              scanPattern: '*.http,*.sql,*.sh'
+            }
+          }
+        ]
+      },
+      'p06-c': {
+        id: 'p06-c', name: 'P06-C 测试验收', icon: '🚀',
+        dir: 'P06_coordination/test_coordination',
+        groups: [
+          {
+            name: '验收文档', icon: '📄', noGroup: true,
+            files: [
+              { id: 'test_exec_plan', name: '测试执行计划', path: 'test_execution_plan.md', type: 'md' }
+            ]
+          }
+        ]
+      }
+    };
+    
+    // S阶段配置（服务仓）
+    const S_PHASES_CONFIG = {
+      's01': {
+        id: 's01', name: 'S01 技术设计', icon: '🎨',
+        dir: 'S01_tech_design',
+        groups: [
+          {
+            name: '技术设计文档', icon: '📄', noGroup: true,
+            files: [
+              { id: 'tech_design', name: '技术设计文档', path: 'tech_design.md', type: 'md' }
+            ]
+          },
+          {
+            name: '第3、4章节', icon: '📄', noGroup: true,
+            files: [
+              { id: 'chapter_3_4', name: '第3、4章节', path: 'chapter_3_4.md', type: 'md' }
+            ]
+          },
+          {
+            name: '代码索引', icon: '📄', noGroup: true,
+            files: [
+              { id: 'code_index', name: '代码索引', path: 'code_index.toon', type: 'toon' }
+            ]
+          },
+          {
+            name: 'API接口', icon: '🔌',
+            files: [
+              { id: 'interface_manifest', name: '接口清单', path: 'artifacts/interface_manifest.toon', type: 'toon' }
+            ],
+            scanDir: 'artifacts/interfaces',
+            scanPattern: '*.md'
+          }
+        ]
+      },
+      's02': {
+        id: 's02', name: 'S02 任务分解', icon: '📋',
+        dir: 'S02_task_breakdown',
+        groups: [
+          {
+            name: '任务文档', icon: '📄',
+            files: [
+              { id: 'task_plan', name: '任务计划', path: 'task_plan.md', type: 'md' }
+            ]
+          }
+        ]
+      },
+      's03': {
+        id: 's03', name: 'S03 实现阶段', icon: '💻',
+        dir: 'S03_implementation',
+        groups: [
+          {
+            name: '概览', icon: '📄',
+            files: [
+              { id: 'readme', name: 'README', path: 'README.md', type: 'md' }
+            ]
+          },
+          {
+            name: 'SQL脚本', icon: '💾',
+            scanDir: 'sql',
+            scanPattern: '*.sql'
+          },
+          {
+            name: '任务日志', icon: '📝',
+            scanDir: '',
+            scanPattern: 'Task_*.md'
+          }
+        ]
+      },
+      's04': {
+        id: 's04', name: 'S04 单元测试', icon: '🧪',
+        dir: 'S04_unit_test',
+        groups: [
+          {
+            name: '测试报告', icon: '📄',
+            files: [
+              { id: 'report', name: '单元测试报告', path: 'unit_test_report.md', type: 'md' }
+            ]
+          }
+        ]
+      },
+      's05': {
+        id: 's05', name: 'S05 集成测试', icon: '🔗',
+        dir: 'S05_integration_plan',
+        groups: [
+          {
+            name: '测试计划', icon: '📄',
+            files: [
+              { id: 'plan', name: '集成测试计划', path: 'integration_plan.md', type: 'md' }
+            ]
+          },
+          {
+            name: '测试脚本', icon: '🧪',
+            scanDir: 'assets',
+            scanPattern: '*.http'
+          },
+          {
+            name: '测试资源', icon: '📦',
+            scanDir: 'assets',
+            scanPattern: '*.sql,*.sh'
+          }
+        ]
+      },
+      's06': {
+        id: 's06', name: 'S06 代码评审', icon: '✅',
+        dir: 'S06_code_review',
+        groups: [
+          {
+            name: '评审报告', icon: '📄',
+            files: [
+              { id: 'report', name: '代码评审报告', path: 'CR_Report.md', type: 'md' }
+            ]
+          }
+        ]
+      },
+      's07': {
+        id: 's07', name: 'S07 E2E测试', icon: '🎯',
+        dir: 'S07_e2e_test',
+        groups: [
+          {
+            name: '测试报告', icon: '📄',
+            files: [
+              { id: 'report', name: 'E2E测试报告', path: 'e2e_test_report.md', type: 'md' }
+            ]
+          }
+        ]
+      }
+    };
+    
+    // ==================== 全局状态 ====================
+    let detectedPhases = [];
+    let phaseType = 's'; // 'p' or 's'
+    let baseDir = '';    // 文件基础路径
+    const tabInitialized = {};
+    const phaseFiles = {}; // 缓存每个阶段检测到的文件
+    let hubStatus = null; // 缓存 hub_status.json
+    
+    // 读取状态文件（P阶段读取 hub_status.json，S/T阶段读取 phase_status.json）
+    async function loadHubStatus() {
+      // 先尝试 hub_status.json（P阶段）
+      try {
+        const response = await fetch('hub_status.json');
+        if (response.ok) {
+          hubStatus = await response.json();
+          return hubStatus;
+        }
+      } catch (e) {
+        console.warn('Failed to load hub_status.json:', e);
+      }
+      // 再尝试 phase_status.json（S/T阶段）
+      try {
+        const response = await fetch('phase_status.json');
+        if (response.ok) {
+          hubStatus = await response.json();
+          return hubStatus;
+        }
+      } catch (e) {
+        console.warn('Failed to load phase_status.json:', e);
+      }
+      return hubStatus;
+    }
+    
+    // 获取阶段状态
+    function getPhaseStatus(phaseId) {
+      if (!hubStatus || !hubStatus.phases) return null;
+      // 尝试不同的 key 格式: P01, p01, P06-A, p06-a
+      const keys = [phaseId.toUpperCase(), phaseId.toLowerCase(), phaseId.toUpperCase().replace('-', '-')];
+      for (const key of keys) {
+        if (hubStatus.phases[key]) return hubStatus.phases[key].status;
+      }
+      return null;
+    }
+    
+    // ==================== 阶段检测 ====================
+    async function fileExists(path) {
+      try {
+        const response = await fetch(path, { method: 'HEAD' });
+        return response.ok;
+      } catch (e) {
+        return false;
+      }
+    }
+    
+    // 从 P04 execution_manifest.json 读取服务列表
+    let cachedServices = null;
+    async function getServicesFromManifest(baseDir) {
+      if (cachedServices !== null) return cachedServices;
+      try {
+        const manifestPath = baseDir + 'P04_service_split/execution_manifest.json';
+        const response = await fetch(manifestPath);
+        if (response.ok) {
+          const manifest = await response.json();
+          const services = manifest.services || [];
+          cachedServices = services.map(s => typeof s === 'string' ? s : (s.name || s.service_name || ''));
+          return cachedServices;
+        }
+      } catch (e) {
+        console.warn('Failed to load execution_manifest.json:', e);
+      }
+      cachedServices = [];
+      return cachedServices;
+    }
+    
+    async function detectPhases() {
+      // 检测可能的目录结构
+      // 1. Hub仓: docs/P01_xxx, docs/P02_xxx...
+      // 2. 服务仓: S01_xxx, S02_xxx... 或 docs/features/xxx/S01_xxx...
+      
+      const pathsToTry = [
+        { base: 'docs/', phases: P_PHASES_CONFIG, type: 'p' },
+        { base: '', phases: S_PHASES_CONFIG, type: 's' },
+        { base: '', phases: P_PHASES_CONFIG, type: 'p' }
+      ];
+      
+      for (const config of pathsToTry) {
+        const phases = Object.values(config.phases);
+        // 检测是否有任意一个阶段存在文件
+        let hasAnyFile = false;
+        for (const phase of phases) {
+          for (const group of phase.groups) {
+            for (const file of (group.files || [])) {
+              if (!file.pattern) {
+                const exists = await fileExists(config.base + phase.dir + '/' + file.path);
+                if (exists) {
+                  hasAnyFile = true;
+                  break;
+                }
+              }
+            }
+            if (hasAnyFile) break;
+          }
+          if (hasAnyFile) break;
+        }
+        
+        // 如果检测到任意文件，返回该配置下的所有阶段（无论是否有文件）
+        if (hasAnyFile) {
+          phaseType = config.type;
+          baseDir = config.base;
+          detectedPhases = phases.map(phase => ({ ...phase, baseDir: config.base }));
+          return detectedPhases;
+        }
+      }
+      
+      // 没有检测到，返回空
+      return [];
+    }
+    
+    // 扫描目录中的文件
+    async function scanFilesInPhase(phase) {
+      const files = [];
+      
+      for (const group of phase.groups) {
+        const groupFiles = [];
+        
+        // 添加预定义文件
+        if (group.files) {
+          for (const file of group.files) {
+            if (!file.pattern) {
+              const exists = await fileExists(phase.baseDir + phase.dir + '/' + file.path);
+              if (exists) {
+                groupFiles.push({ ...file, fullPath: phase.baseDir + phase.dir + '/' + file.path });
+              }
+            }
+          }
+        }
+        
+        // 扫描目录（通过尝试常见文件名或从索引文件提取）
+        if (group.scanDir !== undefined) {
+          const scanBase = phase.baseDir + phase.dir + '/' + (group.scanDir ? group.scanDir + '/' : '');
+          const patterns = (group.scanPattern || '').split(',');
+          
+          // 扫描图片文件 - 从 assets_summary.md 中提取图片路径
+          if (group.scanImages) {
+            const summaryPath = phase.baseDir + phase.dir + '/assets_summary.md';
+            const summaryContent = await loadTextFile(summaryPath);
+            if (summaryContent) {
+              // 从 markdown 表格中提取图片路径，格式如: | `source_export/static/xxx.png` |
+              const imgRegex = /`(source_export\/static\/[^`]+)`/g;
+              let match;
+              while ((match = imgRegex.exec(summaryContent)) !== null) {
+                const imgPath = match[1];
+                const fileName = imgPath.split('/').pop();
+                const ext = fileName.split('.').pop().toLowerCase();
+                if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+                  const fullPath = phase.baseDir + phase.dir + '/' + imgPath;
+                  const exists = await fileExists(fullPath);
+                  if (exists) {
+                    const id = fileName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                    if (!groupFiles.find(f => f.id === id)) {
+                      groupFiles.push({
+                        id,
+                        name: fileName,
+                        path: imgPath,
+                        fullPath,
+                        type: 'image'
+                      });
+                    }
+                  }
+                }
+              }
+            }
+          }
+          
+          // 如果有索引文件，从索引文件中提取文件列表
+          if (group.indexFile) {
+            const indexPath = phase.baseDir + phase.dir + '/' + group.indexFile;
+            const indexContent = await loadTextFile(indexPath);
+            if (indexContent) {
+              // 从 markdown 中提取链接，格式如: [查看](assets_analysis/xxx.md)
+              const linkRegex = /\[.*?\]\(([^)]+)\)/g;
+              let match;
+              while ((match = linkRegex.exec(indexContent)) !== null) {
+                const linkPath = match[1];
+                // 检查是否在目标目录下
+                if (linkPath.startsWith(group.scanDir + '/')) {
+                  const fileName = linkPath.split('/').pop();
+                  const ext = fileName.split('.').pop();
+                  const fullPath = phase.baseDir + phase.dir + '/' + linkPath;
+                  const exists = await fileExists(fullPath);
+                  if (exists) {
+                    const id = fileName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                    // 避免重复
+                    if (!groupFiles.find(f => f.id === id)) {
+                      groupFiles.push({
+                        id,
+                        name: fileName.replace('.md', '').replace('.json', ''),
+                        path: linkPath,
+                        fullPath,
+                        type: ext
+                      });
+                    }
+                  }
+                }
+              }
+            }
+          }
+          
+          // 从 PRD.md 的 front matter 中读取 source 字段获取飞书原文文件名
+          if (group.scanFromPRD) {
+            const prdPath = phase.baseDir + phase.dir + '/PRD.md';
+            const prdContent = await loadTextFile(prdPath);
+            if (prdContent) {
+              // 解析 front matter 中的 source 字段
+              const sourceMatch = prdContent.match(/^---[\s\S]*?source:\s*(.+?)[\r\n][\s\S]*?---/m);
+              if (sourceMatch) {
+                const sourceFile = sourceMatch[1].trim();
+                const fullPath = scanBase + sourceFile;
+                const exists = await fileExists(fullPath);
+                if (exists) {
+                  groupFiles.push({
+                    id: 'source_prd',
+                    name: '飞书原文',
+                    path: group.scanDir + '/' + sourceFile,
+                    fullPath,
+                    type: 'md'
+                  });
+                }
+              }
+            }
+            
+            // 扫描 download_report 开头的文件 - 从 metadata.json 中读取下载时间
+            const metadataPath = phase.baseDir + phase.dir + '/metadata.json';
+            const metadataContent = await loadTextFile(metadataPath);
+            if (metadataContent) {
+              try {
+                const metadata = JSON.parse(metadataContent);
+                // 从 download_time 字段提取日期时间
+                if (metadata.download_time) {
+                  const dt = new Date(metadata.download_time);
+                  const dateStr = dt.toISOString().slice(0, 10).replace(/-/g, '');
+                  const timeStr = dt.toTimeString().slice(0, 8).replace(/:/g, '');
+                  const reportName = `download_report_${dateStr}_${timeStr}.md`;
+                  const fullPath = scanBase + reportName;
+                  const exists = await fileExists(fullPath);
+                  if (exists && !groupFiles.find(f => f.id === 'download_report')) {
+                    groupFiles.push({
+                      id: 'download_report',
+                      name: '下载报告',
+                      path: group.scanDir + '/' + reportName,
+                      fullPath,
+                      type: 'md'
+                    });
+                  }
+                }
+              } catch (e) {
+                console.warn('Failed to parse metadata.json:', e);
+              }
+            }
+          }
+          
+          // 预定义的常见文件名
+          const commonNames = [
+            'README.md', 'index.md', 'main.md',
+            // Task 日志文件 - 支持有无前导零两种格式
+            ...Array.from({length: 20}, (_, i) => `Task_BE-${String(i+1).padStart(2, '0')}_Log.md`),
+            ...Array.from({length: 20}, (_, i) => `Task_BE-${i+1}_Log.md`),
+            ...Array.from({length: 10}, (_, i) => `Task_DATA-${String(i+1).padStart(2, '0')}_Log.md`),
+            ...Array.from({length: 10}, (_, i) => `Task_DATA-${i+1}_Log.md`),
+            // 特殊格式的任务日志
+            'Task_BE-13_to_BE-19_Log.md', 'Task_BE-20_to_BE-25_Log.md',
+            // 测试用例 - 支持多种命名格式
+            ...Array.from({length: 20}, (_, i) => `test_case_${String(i+1).padStart(2, '0')}.http`),
+            ...Array.from({length: 20}, (_, i) => `test_case_${i+1}.http`),
+            // 带后缀名称的测试用例
+            'test_case_01_recommend.http', 'test_case_02_patrol.http', 'test_case_03_pass_immediately.http',
+            'test_case_04_strategy.http', 'test_case_05_shortage.http', 'test_case_06_feishu_category.http',
+            'test_case_07_feishu_area.http', 'test_case_08_display.http', 'test_case_09_detail.http',
+            'test_case_10_patrol_fail.http', 'test_case_11_job.sh',
+            'test_data_preparation.sql', 'test_data_cleanup.sql',
+            // API 文档
+            'API-001.md', 'API-002.md', 'API-003.md', 'API-004.md', 'API-005.md',
+            'API-006.md', 'API-007.md', 'API-008.md', 'API-009.md', 'API-010.md',
+            'API-011.md', 'API-012.md', 'API-013.md', 'API-014.md', 'API-015.md'
+          ];
+          
+          for (const name of commonNames) {
+            if (name.includes('*')) continue; // 跳过通配符
+            const ext = name.split('.').pop();
+            // 检查是否匹配模式：支持 *.ext 和 prefix_*.ext 格式
+            const matchesPattern = patterns.some(p => {
+              const trimmed = p.trim();
+              if (trimmed === '*.' + ext) return true;
+              // 支持 Task_*.md 这种前缀模式
+              if (trimmed.includes('*')) {
+                const prefix = trimmed.split('*')[0];
+                const suffix = trimmed.split('*')[1] || '';
+                return name.startsWith(prefix) && name.endsWith(suffix);
+              }
+              return false;
+            });
+            if (matchesPattern) {
+              const fullPath = scanBase + name;
+              const exists = await fileExists(fullPath);
+              if (exists) {
+                const id = name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                // 避免重复
+                if (!groupFiles.find(f => f.id === id)) {
+                  groupFiles.push({
+                    id,
+                    name: name.replace(/\.(md|sql|http|sh|json|toon)$/, ''),
+                    path: (group.scanDir ? group.scanDir + '/' : '') + name,
+                    fullPath,
+                    type: ext
+                  });
+                }
+              }
+            }
+          }
+        }
+        
+        // 处理动态服务发现
+        let processedSubgroups = [];
+        if (group.dynamicServices) {
+          const services = await getServicesFromManifest(phase.baseDir);
+          for (const serviceName of services) {
+            const subgroupFiles = [];
+            
+            // 根据模板生成文件列表
+            if (group.serviceFilesTemplate) {
+              for (const template of group.serviceFilesTemplate) {
+                const path = template.pathTemplate.replace('{service}', serviceName);
+                const fullPath = phase.baseDir + phase.dir + '/' + path;
+                const exists = await fileExists(fullPath);
+                if (exists) {
+                  subgroupFiles.push({
+                    id: template.id + '_' + serviceName.replace(/[^a-zA-Z0-9]/g, '_'),
+                    name: template.name,
+                    path: path,
+                    fullPath: fullPath,
+                    type: template.type
+                  });
+                }
+              }
+            }
+            
+            // 根据模板扫描目录
+            if (group.serviceScanTemplate) {
+              const scanDir = group.serviceScanTemplate.scanDir.replace('{service}', serviceName);
+              const scanBase = phase.baseDir + phase.dir + '/' + scanDir + '/';
+              const patterns = (group.serviceScanTemplate.scanPattern || '').split(',');
+              const commonNames = [
+                'test_case_01_recommend.http', 'test_case_02_patrol.http', 'test_case_03_pass_immediately.http',
+                'test_case_04_strategy.http', 'test_case_05_shortage.http', 'test_case_06_feishu_category.http',
+                'test_case_07_feishu_area.http', 'test_case_08_display.http', 'test_case_09_detail.http',
+                'test_case_10_patrol_fail.http', 'test_case_11_job.sh',
+                'test_data_preparation.sql', 'test_data_cleanup.sql'
+              ];
+              for (const name of commonNames) {
+                const ext = name.split('.').pop();
+                const matchesPattern = patterns.some(p => {
+                  const trimmed = p.trim();
+                  if (trimmed === '*.' + ext) return true;
+                  return false;
+                });
+                if (matchesPattern) {
+                  const fullPath = scanBase + name;
+                  const exists = await fileExists(fullPath);
+                  if (exists) {
+                    const id = name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                    if (!subgroupFiles.find(f => f.id === id)) {
+                      subgroupFiles.push({
+                        id,
+                        name: name.replace(/\.(md|sql|http|sh|json|toon)$/, ''),
+                        path: scanDir + '/' + name,
+                        fullPath,
+                        type: ext
+                      });
+                    }
+                  }
+                }
+              }
+            }
+            
+            if (subgroupFiles.length > 0) {
+              processedSubgroups.push({
+                name: serviceName,
+                icon: '📦',
+                files: subgroupFiles
+              });
+            }
+          }
+        }
+        
+        // 处理静态 subgroups
+        if (group.subgroups) {
+          for (const subgroup of group.subgroups) {
+            const subgroupFiles = [];
+            
+            // 添加子分组的预定义文件
+            if (subgroup.files) {
+              for (const file of subgroup.files) {
+                const exists = await fileExists(phase.baseDir + phase.dir + '/' + file.path);
+                if (exists) {
+                  subgroupFiles.push({ ...file, fullPath: phase.baseDir + phase.dir + '/' + file.path });
+                }
+              }
+            }
+            
+            // 扫描图片文件 - 从 assets_summary.md 中提取图片路径
+            if (subgroup.scanImages) {
+              const summaryPath = phase.baseDir + phase.dir + '/assets_summary.md';
+              const summaryContent = await loadTextFile(summaryPath);
+              if (summaryContent) {
+                // 从 assets_summary.md 中提取 source_export/static/ 下的图片路径
+                const imgRegex = /source_export\/static\/([^\s`|)]+\.(png|jpg|jpeg|gif|webp))/gi;
+                let match;
+                const seenImages = new Set();
+                while ((match = imgRegex.exec(summaryContent)) !== null) {
+                  const imgName = match[1];
+                  if (seenImages.has(imgName)) continue;
+                  seenImages.add(imgName);
+                  const fullPath = phase.baseDir + phase.dir + '/source_export/static/' + imgName;
+                  const ext = imgName.split('.').pop().toLowerCase();
+                  subgroupFiles.push({
+                    id: 'img_' + imgName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase(),
+                    name: imgName,
+                    path: 'source_export/static/' + imgName,
+                    fullPath,
+                    type: ext
+                  });
+                }
+              }
+            }
+            
+            // 子分组的目录扫描
+            if (subgroup.scanDir !== undefined && !subgroup.scanImages) {
+              const scanBase = phase.baseDir + phase.dir + '/' + (subgroup.scanDir ? subgroup.scanDir + '/' : '');
+              const patterns = (subgroup.scanPattern || '').split(',');
+              const commonNames = [
+                'test_case_01_recommend.http', 'test_case_02_patrol.http', 'test_case_03_pass_immediately.http',
+                'test_case_04_strategy.http', 'test_case_05_shortage.http', 'test_case_06_feishu_category.http',
+                'test_case_07_feishu_area.http', 'test_case_08_display.http', 'test_case_09_detail.http',
+                'test_case_10_patrol_fail.http', 'test_case_11_job.sh',
+                'test_data_preparation.sql', 'test_data_cleanup.sql'
+              ];
+              for (const name of commonNames) {
+                const ext = name.split('.').pop();
+                const matchesPattern = patterns.some(p => {
+                  const trimmed = p.trim();
+                  if (trimmed === '*.' + ext) return true;
+                  return false;
+                });
+                if (matchesPattern) {
+                  const fullPath = scanBase + name;
+                  const exists = await fileExists(fullPath);
+                  if (exists) {
+                    const id = name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                    if (!subgroupFiles.find(f => f.id === id)) {
+                      subgroupFiles.push({
+                        id,
+                        name: name.replace(/\.(md|sql|http|sh|json|toon)$/, ''),
+                        path: (subgroup.scanDir ? subgroup.scanDir + '/' : '') + name,
+                        fullPath,
+                        type: ext
+                      });
+                    }
+                  }
+                }
+              }
+            }
+            
+            if (subgroupFiles.length > 0) {
+              processedSubgroups.push({ ...subgroup, files: subgroupFiles });
+            }
+          }
+        }
+        
+        if (groupFiles.length > 0 || processedSubgroups.length > 0) {
+          files.push({ ...group, files: groupFiles, subgroups: processedSubgroups });
+        }
+      }
+      
+      return files;
+    }
+    
+    // ==================== UI 生成 ====================
+    function generateNavTabs() {
+      const navTabs = document.getElementById('nav-tabs');
+      const topNav = document.getElementById('top-nav');
+      const navTitle = document.getElementById('nav-title');
+      const navInfo = document.getElementById('nav-info');
+      
+      if (phaseType === 'p') {
+        topNav.classList.add('p-phase');
+        navTitle.textContent = '需求Hub - 产物总览';
+      } else {
+        navTitle.textContent = '服务开发 - 产物总览';
+      }
+      
+      // 从路径获取 feature 名称
+      const pathParts = window.location.pathname.split('/');
+      const featureIdx = pathParts.findIndex(p => p.startsWith('feature'));
+      navInfo.textContent = featureIdx >= 0 ? pathParts[featureIdx] : pathParts[pathParts.length - 2] || '';
+      
+      navTabs.innerHTML = detectedPhases.map((phase, idx) => {
+        const status = getPhaseStatus(phase.id);
+        const statusClass = status === 'approved' ? 'approved' : (status === 'in_progress' || status === 'pending_review' ? 'in-progress' : 'not-started');
+        return `
+          <div class="nav-tab ${statusClass} ${idx === 0 ? 'active' : ''}" data-tab="${phase.id}">
+            <span class="tab-icon">${phase.icon}</span>${phase.name}
+          </div>
+        `;
+      }).join('');
+      
+      navTabs.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+      });
+    }
+    
+    // 获取阶段状态文本
+    function getPhaseStatusText(phaseId) {
+      const status = getPhaseStatus(phaseId);
+      if (status === 'approved') return '已完成';
+      if (status === 'in_progress') return '进行中';
+      if (status === 'pending_review') return '待审核';
+      return '未开始';
+    }
+    
+    function generateTabContents() {
+      const mainContainer = document.getElementById('main-container');
+      
+      mainContainer.innerHTML = detectedPhases.map((phase, idx) => {
+        const status = getPhaseStatus(phase.id);
+        const statusText = getPhaseStatusText(phase.id);
+        const statusClass = status === 'approved' ? 'success' : '';
+        return `
+          <div class="tab-content ${idx === 0 ? 'active' : ''}" id="tab-${phase.id}">
+            <div class="sidebar">
+              <div class="sidebar-header">
+                <h3>${phase.icon} ${phase.name}</h3>
+                <div class="sidebar-stats">
+                  <span class="stat-item ${statusClass}">${statusText}</span>
+                </div>
+              </div>
+              <div class="sidebar-content" id="${phase.id}-tree"></div>
+            </div>
+            <div class="content-area">
+              <div class="content-header">
+                <div class="content-breadcrumb">${phase.name}</div>
+                <h2 class="content-title" id="${phase.id}-title">加载中...</h2>
+              </div>
+              <div class="content-body" id="${phase.id}-content">
+                <div class="loading"><div class="spinner"></div><div>加载中...</div></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    async function initPhaseTree(phase) {
+      const tree = document.getElementById(phase.id + '-tree');
+      if (!tree) return;
+      
+      // 扫描并获取实际存在的文件
+      const groups = await scanFilesInPhase(phase);
+      phaseFiles[phase.id] = groups;
+      
+      // 处理仅下载阶段的特殊提示
+      if (phase.downloadOnly) {
+        // 左侧目录显示空状态
+        tree.innerHTML = '<div class="empty-state"><div class="icon">📦</div><div class="text">暂无文件</div></div>';
+        // 内容区显示提示
+        const content = document.getElementById(phase.id + '-content');
+        const title = document.getElementById(phase.id + '-title');
+        if (title) title.textContent = '本地查看';
+        if (content) {
+          content.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;">
+            <div style="text-align:center;padding:60px;">
+              <div style="font-size:72px;margin-bottom:24px;">📦</div>
+              <div style="font-size:16px;color:#666;line-height:1.8;">${phase.downloadHint || 'P02仅导入知识库，不生成分析产物。'}</div>
+            </div>
+          </div>`;
+        }
+        return;
+      }
+      
+      if (groups.length === 0) {
+        tree.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div class="text">暂无文件</div></div>';
+        const content = document.getElementById(phase.id + '-content');
+        const title = document.getElementById(phase.id + '-title');
+        if (content) content.innerHTML = '<div class="empty-state" style="height:100%;display:flex;align-items:center;justify-content:center"><div style="text-align:center"><div style="font-size:48px;margin-bottom:16px">📭</div><div style="color:#999;font-size:14px">该阶段暂无产出物</div></div></div>';
+        if (title) title.textContent = '暂无产出物';
+        return;
+      }
+      
+      let isFirst = true;
+      
+      // 渲染文件项的辅助函数
+      function renderFileItem(file, phaseId, indent = 0) {
+        const active = isFirst ? 'active' : '';
+        isFirst = false;
+        const paddingLeft = indent > 0 ? `style="padding-left:${16 + indent * 16}px"` : '';
+        return `
+          <div class="tree-item ${active}" data-id="${file.id}" data-path="${file.fullPath}" onclick="showPhaseContent('${phaseId}', '${file.id}')" ${paddingLeft}>
+            <span class="item-icon">📄</span>
+            <span class="item-name">${file.name}</span>
+            <span class="file-tag ${file.type}">${file.type.toUpperCase()}</span>
+          </div>
+        `;
+      }
+      
+      // 渲染子分组的辅助函数
+      function renderSubgroup(subgroup, phaseId) {
+        const fileCount = (subgroup.files || []).length;
+        return `
+          <div class="tree-group">
+            <div class="tree-group-header" onclick="this.parentElement.classList.toggle('expanded'); this.classList.toggle('expanded')">
+              <span class="arrow">▶</span>
+              <span class="icon">${subgroup.icon || '📁'}</span>
+              <span class="name">${subgroup.name}</span>
+              <span class="count">${fileCount}</span>
+            </div>
+            <div class="tree-group-children">
+              ${(subgroup.files || []).map(file => renderFileItem(file, phaseId, 1)).join('')}
+            </div>
+          </div>
+        `;
+      }
+      
+      tree.innerHTML = groups.map(group => {
+        // noGroup: true 时直接渲染文件项，不包装分组
+        if (group.noGroup) {
+          return (group.files || []).map(file => renderFileItem(file, phase.id)).join('');
+        }
+        
+        // 计算总文件数（包括子分组中的文件）
+        let totalFiles = (group.files || []).length;
+        if (group.subgroups) {
+          group.subgroups.forEach(sg => totalFiles += (sg.files || []).length);
+        }
+        
+        const groupHtml = `
+          <div class="tree-group">
+            <div class="tree-group-header" onclick="this.parentElement.classList.toggle('expanded'); this.classList.toggle('expanded')">
+              <span class="arrow">▶</span>
+              <span class="icon">${group.icon}</span>
+              <span class="name">${group.name}</span>
+              <span class="count">${totalFiles}</span>
+            </div>
+            <div class="tree-group-children">
+              ${(group.files || []).map(file => renderFileItem(file, phase.id)).join('')}
+              ${(group.subgroups || []).map(sg => renderSubgroup(sg, phase.id)).join('')}
+            </div>
+          </div>
+        `;
+        return groupHtml;
+      }).join('');
+    }
+    
+    // ==================== Tab 切换 ====================
+    function switchTab(tabId) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      const tab = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
+      const content = document.getElementById('tab-' + tabId);
+      
+      if (tab && content) {
+        tab.classList.add('active');
+        content.classList.add('active');
+        history.replaceState(null, '', '#' + tabId);
+        
+        if (!tabInitialized[tabId]) {
+          tabInitialized[tabId] = true;
+          const phase = detectedPhases.find(p => p.id === tabId);
+          if (phase) {
+            initPhaseTree(phase).then(() => {
+              // 加载第一个文件（优先直接文件，其次子分组中的文件）
+              const groups = phaseFiles[tabId];
+              if (groups && groups.length > 0) {
+                let firstFile = null;
+                for (const g of groups) {
+                  if (g.files && g.files.length > 0) { firstFile = g.files[0]; break; }
+                  if (g.subgroups) {
+                    for (const sg of g.subgroups) {
+                      if (sg.files && sg.files.length > 0) { firstFile = sg.files[0]; break; }
+                    }
+                    if (firstFile) break;
+                  }
+                }
+                if (firstFile) showPhaseContent(tabId, firstFile.id);
+              }
+            });
+          }
+        }
+      }
+    }
+    
+    function getTabFromHash() {
+      const hash = window.location.hash.slice(1);
+      if (hash && detectedPhases.find(p => p.id === hash)) {
+        return hash;
+      }
+      return detectedPhases[0]?.id || 's01';
+    }
+    
+    window.addEventListener('hashchange', () => {
+      switchTab(getTabFromHash());
+    });
+    
+    // 内部文件跳转 - 点击 md 链接时在当前页面展示内容
+    async function navigateToFile(fullPath) {
+      // 查找该文件属于哪个 phase 和 fileId（包括 subgroups）
+      for (const phaseId in phaseFiles) {
+        const groups = phaseFiles[phaseId];
+        for (const group of groups || []) {
+          let file = (group.files || []).find(f => f.fullPath === fullPath);
+          if (!file && group.subgroups) {
+            for (const sg of group.subgroups) {
+              file = (sg.files || []).find(f => f.fullPath === fullPath);
+              if (file) break;
+            }
+          }
+          if (file) {
+            // 切换到对应 tab
+            switchTab(phaseId);
+            // 展示内容
+            setTimeout(() => showPhaseContent(phaseId, file.id), 100);
+            return;
+          }
+        }
+      }
+      // 如果在已加载的文件中找不到，直接加载并展示
+      const currentPhaseId = getTabFromHash();
+      const content = document.getElementById(currentPhaseId + '-content');
+      const title = document.getElementById(currentPhaseId + '-title');
+      if (content && title) {
+        content.innerHTML = '<div class="loading"><div class="spinner"></div><div>加载中...</div></div>';
+        title.textContent = fullPath.split('/').pop().replace('.md', '');
+        const md = await loadMarkdown(fullPath);
+        content.innerHTML = renderMarkdown(md);
+      }
+    }
+    
+    // ==================== 内容展示 ====================
+    async function showPhaseContent(phaseId, fileId) {
+      const content = document.getElementById(phaseId + '-content');
+      const title = document.getElementById(phaseId + '-title');
+      content.innerHTML = '<div class="loading"><div class="spinner"></div><div>加载中...</div></div>';
+      
+      // 设置 active 状态
+      document.querySelectorAll(`#${phaseId}-tree .tree-item`).forEach(i => i.classList.remove('active'));
+      const activeItem = document.querySelector(`#${phaseId}-tree .tree-item[data-id="${fileId}"]`);
+      if (activeItem) {
+        activeItem.classList.add('active');
+      }
+      
+      // 查找文件信息（包括 subgroups 中的文件）
+      const groups = phaseFiles[phaseId];
+      let file = null;
+      for (const group of groups || []) {
+        file = (group.files || []).find(f => f.id === fileId);
+        if (file) break;
+        // 在 subgroups 中查找
+        if (group.subgroups) {
+          for (const sg of group.subgroups) {
+            file = (sg.files || []).find(f => f.id === fileId);
+            if (file) break;
+          }
+          if (file) break;
+        }
+      }
+      
+      if (!file) {
+        content.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><div class="text">文件未找到</div></div>';
+        return;
+      }
+      
+      title.textContent = file.name;
+      
+      if (file.type === 'md') {
+        const md = await loadMarkdown(file.fullPath);
+        content.innerHTML = renderMarkdown(md);
+      } else if (file.type === 'toon') {
+        const text = await loadTextFile(file.fullPath);
+        content.innerHTML = renderToonFile(text);
+      } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(file.type)) {
+        content.innerHTML = renderImageFile(file.fullPath, file.name);
+      } else {
+        const text = await loadTextFile(file.fullPath);
+        content.innerHTML = renderCodeFile(text, file.type);
+      }
+    }
+    
+    function renderImageFile(path, name) {
+      return `
+        <div class="card">
+          <div class="card-title"><span class="icon">🖼️</span>图片预览</div>
+          <div style="text-align: center; padding: 20px;">
+            <img src="${path}" alt="${name}" style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
+            <div style="margin-top: 12px; color: #8c8c8c; font-size: 12px;">${name}</div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // ==================== 文件加载 ====================
+    async function loadMarkdown(path) {
+      try {
+        const response = await fetch(path);
+        if (!response.ok) throw new Error('File not found');
+        return { content: await response.text(), basePath: path.substring(0, path.lastIndexOf('/') + 1) };
+      } catch (e) {
+        console.error('Failed to load:', path, e);
+        return null;
+      }
+    }
+    
+    async function loadTextFile(path) {
+      try {
+        const response = await fetch(path);
+        if (!response.ok) throw new Error('File not found');
+        return await response.text();
+      } catch (e) {
+        console.error('Failed to load:', path, e);
+        return null;
+      }
+    }
+    
+    // ==================== Markdown 渲染 ====================
+    function extractOutline(content) {
+      const headings = [];
+      const lines = content.split('\n');
+      
+      lines.forEach((line, index) => {
+        const match = line.match(/^(#{1,4})\s+(.+)$/);
+        if (match) {
+          const level = match[1].length;
+          const text = match[2].replace(/[*_`]/g, '').trim();
+          const id = 'heading-' + index + '-' + text.replace(/[^\w\u4e00-\u9fa5]/g, '-').toLowerCase();
+          headings.push({ level, text, id });
+        }
+      });
+      
+      return headings;
+    }
+    
+    function generateOutlineHtml(headings) {
+      if (headings.length === 0) return '';
+      
+      let html = `
+        <div class="doc-outline">
+          <div class="doc-outline-title" onclick="this.nextElementSibling.classList.toggle('collapsed'); this.querySelector('.toggle').textContent = this.nextElementSibling.classList.contains('collapsed') ? '展开' : '收起'">
+            文档大纲 (${headings.length})
+            <span class="toggle">收起</span>
+          </div>
+          <ul class="doc-outline-list">
+      `;
+      
+      headings.forEach(h => {
+        html += `<li class="doc-outline-item level-${h.level}" onclick="scrollToHeading('${h.id}')">${h.text}</li>`;
+      });
+      
+      html += '</ul></div>';
+      return html;
+    }
+    
+    function scrollToHeading(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.style.background = '#fff7e6';
+        setTimeout(() => { el.style.background = ''; }, 2000);
+      }
+    }
+    
+    function renderMarkdown(result) {
+      if (!result) return '<div class="empty-state"><div class="icon">⚠️</div><div class="text">内容加载失败</div></div>';
+      
+      let { content, basePath } = result;
+      
+      // 处理 YAML front matter
+      let frontMatterHtml = '';
+      if (content.startsWith('---')) {
+        const lines = content.split(/\r?\n/);
+        let endIdx = -1;
+        for (let i = 1; i < lines.length; i++) {
+          if (lines[i].trim() === '---') {
+            endIdx = i;
+            break;
+          }
+        }
+        if (endIdx > 0) {
+          const fmLines = lines.slice(1, endIdx);
+          content = lines.slice(endIdx + 1).join('\n');
+          if (fmLines.length > 0) {
+            frontMatterHtml = '<div class="front-matter"><div class="front-matter-title">📋 文档元数据</div><div class="front-matter-items">';
+            fmLines.forEach(line => {
+              const colonIdx = line.indexOf(':');
+              if (colonIdx > 0) {
+                const key = line.slice(0, colonIdx).trim();
+                const value = line.slice(colonIdx + 1).trim();
+                if (key && value) {
+                  frontMatterHtml += `<span class="front-matter-item"><span class="fm-key">${escapeHtml(key)}</span><span class="fm-value">${escapeHtml(value)}</span></span>`;
+                }
+              }
+            });
+            frontMatterHtml += '</div></div>';
+          }
+        }
+      }
+      
+      const headings = extractOutline(content);
+      const outlineHtml = generateOutlineHtml(headings);
+      
+      let html = marked.parse(content);
+      
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      
+      let headingIdx = 0;
+      tempDiv.querySelectorAll('h1, h2, h3, h4').forEach(heading => {
+        if (headingIdx < headings.length) {
+          heading.id = headings[headingIdx].id;
+          headingIdx++;
+        }
+      });
+      
+      html = tempDiv.innerHTML;
+      
+      // 处理 Mermaid - 保存原始代码用于渲染失败时回退显示
+      html = html.replace(/<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g, (match, code) => {
+        const decoded = code.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"');
+        const escapedCode = escapeHtml(decoded);
+        return `<div class="mermaid-wrapper" data-original="${encodeURIComponent(decoded)}"><div class="mermaid">${decoded}</div></div>`;
+      });
+      
+      // 修复相对路径 - 图片
+      html = html.replace(/src="([^"]+)"/g, (match, src) => {
+        if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) {
+          return match;
+        }
+        return `src="${basePath}${src}"`;
+      });
+      
+      // 修复相对路径 - 链接（本地 .md 文件链接改为内部跳转）
+      html = html.replace(/href="([^"]+\.md)"/g, (match, href) => {
+        if (href.startsWith('http://') || href.startsWith('https://')) {
+          return match;
+        }
+        const fullPath = basePath + href;
+        return `href="javascript:void(0)" onclick="navigateToFile('${fullPath}')"`;
+      });
+      
+      setTimeout(async () => {
+        // 逐个渲染 Mermaid，使用 mermaid.render 可以捕获错误
+        for (const wrapper of document.querySelectorAll('.mermaid-wrapper')) {
+          const mermaidDiv = wrapper.querySelector('.mermaid');
+          const originalCode = decodeURIComponent(wrapper.dataset.original || '');
+          const id = 'mermaid-' + Math.random().toString(36).substr(2, 9);
+          
+          try {
+            const { svg } = await mermaid.render(id, originalCode);
+            mermaidDiv.innerHTML = svg;
+          } catch (e) {
+            // 渲染失败，显示原始代码
+            console.warn('Mermaid render failed:', e.message);
+            wrapper.innerHTML = `<pre class="mermaid-fallback"><code class="language-mermaid">${escapeHtml(originalCode)}</code></pre>`;
+          }
+        }
+        
+        enhanceTables();
+        
+        // 增强资产汇总表格（P01 assets_summary.md）
+        document.querySelectorAll('.markdown-body').forEach(container => {
+          enhanceAssetTable(container);
+        });
+      }, 100);
+      
+      return frontMatterHtml + outlineHtml + '<div class="markdown-body">' + html + '</div>';
+    }
+    
+    function renderCodeFile(content, language) {
+      if (!content) return '<div class="empty-state"><div class="icon">⚠️</div><div class="text">内容加载失败</div></div>';
+      
+      return `
+        <div class="card">
+          <div class="card-title"><span class="icon">📄</span>文件内容</div>
+          <pre class="code-preview"><code>${escapeHtml(content)}</code></pre>
+        </div>
+      `;
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // ==================== TOON 格式解析 ====================
+    function parseToon(content) {
+      const result = { comments: [], metadata: {}, sections: [] };
+      const lines = content.split('\n');
+      let currentSection = null;
+      let currentItem = null;
+      let currentSubKey = null;
+      let currentSubItem = null; // 当前子列表项（如 methods 中的某个方法）
+      let currentTableDef = null; // 当前表格定义 {name, fields, items}
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+        
+        // 跳过空行
+        if (!trimmed) continue;
+        
+        // 顶级注释
+        if (trimmed.startsWith('#') && !trimmed.startsWith('##')) {
+          if (!currentSection) {
+            const commentText = trimmed.substring(1).trim();
+            // 跳过装饰性分隔线（如 ==================== CHAPTER_1: ... ====================）
+            if (!commentText.match(/^=+/) && !commentText.match(/=+$/)) {
+              result.comments.push(commentText);
+            }
+          }
+          continue;
+        }
+        
+        // 子章节标题 ### SUBSECTION_NAME
+        if (trimmed.startsWith('### ')) {
+          const subName = trimmed.substring(4).trim();
+          if (currentSection) {
+            // 作为一个特殊的分隔项
+            currentSection.items.push({ _type: 'subsection', _title: subName });
+          }
+          currentTableDef = null;
+          currentItem = null;
+          continue;
+        }
+        
+        // 章节标题 ## SECTION_NAME: 或 SECTION_NAME: (顶级，无缩进)
+        if (trimmed.startsWith('## ') && trimmed.endsWith(':')) {
+          const sectionName = trimmed.substring(3, trimmed.length - 1);
+          currentSection = { name: sectionName, items: [], kvs: [], tables: [] };
+          result.sections.push(currentSection);
+          currentItem = null;
+          currentSubKey = null;
+          currentTableDef = null;
+          continue;
+        }
+        
+        // 顶级表格定义（无缩进，如 MODULES[N]{...}:）- 必须在章节标题判断之前！
+        if (line.search(/\S/) === 0) {
+          const topTableMatch = trimmed.match(/^([\w_]+)\[(\d+|N)\]\{([^}]+)\}:$/);
+          if (topTableMatch) {
+            const [, tableName, countStr, fieldsStr] = topTableMatch;
+            const count = countStr === 'N' ? -1 : parseInt(countStr);
+            const fields = fieldsStr.split(',').map(f => f.trim());
+            // 创建新章节并添加表格
+            currentSection = { name: tableName, items: [], kvs: [], tables: [] };
+            result.sections.push(currentSection);
+            currentTableDef = { name: tableName, count, fields, items: [], indent: 0 };
+            currentSection.tables.push(currentTableDef);
+            currentItem = null;
+            currentSubKey = null;
+            continue;
+          }
+          // 混合格式表格定义（无{fields}，如 function_assignments[26]:）
+          const topMixedMatch = trimmed.match(/^([\w_]+)\[(\d+|N)\]:$/);
+          if (topMixedMatch) {
+            const [, tableName, countStr] = topMixedMatch;
+            currentSection = { name: tableName, items: [], kvs: [], tables: [], _mixed: true };
+            result.sections.push(currentSection);
+            currentTableDef = null;
+            currentItem = null;
+            currentSubKey = null;
+            // 解析混合格式内容块
+            let j = i + 1;
+            let currentGroup = null;
+            while (j < lines.length) {
+              const nextLine = lines[j];
+              const nextTrimmed = nextLine.trim();
+              if (nextTrimmed === '') { j++; continue; }
+              const nextIndent = nextLine.search(/\S/);
+              if (nextIndent === 0 && !nextTrimmed.startsWith('#')) break;
+              if (nextTrimmed.startsWith('#')) { j++; continue; }
+              // 多服务分组行: F1.6,取消上报异常[2]:
+              const groupMatch = nextTrimmed.match(/^(.+?)\[(\d+)\]:$/);
+              if (groupMatch && nextIndent > 0 && !nextTrimmed.startsWith('- ')) {
+                const groupParts = groupMatch[1].split(',').map(p => p.trim());
+                currentGroup = { _type: 'multi', _id: groupParts[0] || '', _name: groupParts[1] || '', _count: parseInt(groupMatch[2]), _services: [] };
+                currentSection.items.push(currentGroup);
+                j++;
+                continue;
+              }
+              // 子服务行: - service,role,action,...
+              if (nextTrimmed.startsWith('- ') && currentGroup) {
+                const subContent = nextTrimmed.substring(2);
+                const subParts = subContent.split(',').map(p => p.trim());
+                currentGroup._services.push({ service: subParts[0] || '', role: subParts[1] || '', action: subParts[2] || '', domain: subParts[3] || '', workflow: subParts[4] || '' });
+                j++;
+                continue;
+              }
+              // 单服务行: F1.1,异常类型选择,service,role,action,domain,workflow
+              if (nextIndent > 0 && !nextTrimmed.startsWith('- ')) {
+                currentGroup = null;
+                const parts = nextTrimmed.split(',').map(p => p.trim());
+                if (parts.length >= 2) {
+                  currentSection.items.push({ _type: 'single', _id: parts[0], _name: parts[1], service: parts[2] || '', role: parts[3] || '', action: parts[4] || '', domain: parts[5] || '', workflow: parts[6] || '' });
+                }
+                j++;
+                continue;
+              }
+              break;
+            }
+            i = j - 1;
+            continue;
+          }
+        }
+        
+        // 顶级章节标题（无缩进，以冒号结尾，如 META:, PRD_CONTEXT:）
+        if (line.search(/\S/) === 0 && trimmed.endsWith(':') && !trimmed.includes(' ') && trimmed.length > 1) {
+          const sectionName = trimmed.substring(0, trimmed.length - 1);
+          currentSection = { name: sectionName, items: [], kvs: [], tables: [] };
+          result.sections.push(currentSection);
+          currentItem = null;
+          currentSubKey = null;
+          currentTableDef = null;
+          continue;
+        }
+        
+        // 计算缩进级别（在 currentSection 检查之前，因为需要处理表格数据）
+        const indent = line.search(/\S/);
+        
+        // 如果当前有表格定义，优先检查是否是数据行
+        if (currentTableDef) {
+          // 检查是否是新的表格定义或章节标题（避免误判）
+          const isNewTableDef = trimmed.match(/^([\w_]+)\[(\d+|N)\]\{([^}]+)\}:$/);
+          const isSectionHeader = (line.search(/\S/) === 0 && trimmed.endsWith(':') && !trimmed.includes(' ') && trimmed.length > 1);
+          
+          // 数据行判断：不是新表格定义、不是章节标题、且有适当缩进
+          // 对于顶级表格（indent=0），数据行可以是任意非空行（只要不是新定义）
+          const isDataRow = !isNewTableDef && !isSectionHeader && !trimmed.startsWith('#') && 
+                           (currentTableDef.indent === 0 ? indent >= 0 : indent > currentTableDef.indent);
+          
+          if (isDataRow) {
+            // 解析逗号分隔的数据行
+            const values = parseTableRow(trimmed, currentTableDef.fields);
+            if (values.length > 0) {
+              const rowData = {};
+              currentTableDef.fields.forEach((field, idx) => {
+                rowData[field] = values[idx] || '';
+              });
+              currentTableDef.items.push(rowData);
+            }
+            continue;
+          } else if (isNewTableDef || isSectionHeader || trimmed === '') {
+            // 表格数据结束（遇到新表格定义、章节标题或空行）
+            currentTableDef = null;
+            // 不要 continue，让后续逻辑处理
+          }
+        }
+        
+        if (!currentSection) continue;
+        
+        // 检测表格式列表定义: name[count]{field1,field2,...}: 或 name[N]{field1,field2,...}:
+        // 支持缩进的表格定义（在章节内部）
+        const tableDefMatch = trimmed.match(/^([\w_]+)\[(\d+|N)\]\{([^}]+)\}:$/);
+        if (tableDefMatch) {
+          const [, tableName, countStr, fieldsStr] = tableDefMatch;
+          const count = countStr === 'N' ? -1 : parseInt(countStr);
+          const fields = fieldsStr.split(',').map(f => f.trim());
+          currentTableDef = { name: tableName, count, fields, items: [], indent };
+          currentSection.tables.push(currentTableDef);
+          currentItem = null;
+          currentSubKey = null;
+          continue;
+        }
+        
+        // 列表项 - xxx
+        if (trimmed.startsWith('- ')) {
+          const itemContent = trimmed.substring(2);
+          // 检查是否是 key:value 格式
+          const colonIdx = itemContent.indexOf(':');
+          if (colonIdx > 0) {
+            const key = itemContent.substring(0, colonIdx).trim();
+            const value = itemContent.substring(colonIdx + 1).trim();
+            if (indent <= 2) {
+              // 顶级列表项
+              currentItem = { _id: key, _value: value, _children: [] };
+              currentSection.items.push(currentItem);
+              currentSubKey = null;
+              currentSubItem = null;
+            } else if (currentItem && currentSubKey) {
+              // 子列表项 - 创建新的子项并保存引用
+              if (!currentItem[currentSubKey]) currentItem[currentSubKey] = [];
+              currentSubItem = { [key]: value };
+              currentItem[currentSubKey].push(currentSubItem);
+            } else if (currentItem) {
+              currentItem._children.push({ key, value });
+              currentSubItem = null;
+            }
+          } else {
+            // 纯列表项
+            if (currentItem && currentSubKey) {
+              if (!currentItem[currentSubKey]) currentItem[currentSubKey] = [];
+              currentSubItem = { _value: itemContent };
+              currentItem[currentSubKey].push(currentSubItem);
+            }
+          }
+          continue;
+        }
+        
+        // 键值对 key:value
+        const colonIdx = trimmed.indexOf(':');
+        if (colonIdx > 0) {
+          const key = trimmed.substring(0, colonIdx).trim();
+          const value = trimmed.substring(colonIdx + 1).trim();
+          
+          if (indent <= 2 && !currentItem) {
+            // 章节级别的键值对
+            // 如果 value 为空或为 YAML 多行块标记 |，收集后续缩进的内容
+            if (value === '' || value === '|') {
+              // 收集所有后续缩进大于当前行的内容作为原始文本块
+              const nestedLines = [];
+              const baseIndent = indent;
+              let j = i + 1;
+              while (j < lines.length) {
+                const nextLine = lines[j];
+                const nextTrimmed = nextLine.trim();
+                if (nextTrimmed === '') {
+                  nestedLines.push('');
+                  j++;
+                  continue;
+                }
+                const nextIndent = nextLine.search(/\S/);
+                if (nextIndent > baseIndent) {
+                  nestedLines.push(nextLine);
+                  j++;
+                } else {
+                  break;
+                }
+              }
+              if (nestedLines.length > 0) {
+                // 保存为原始文本块
+                currentSection.kvs.push({ key, value: '', rawBlock: nestedLines.join('\n') });
+                i = j - 1; // 跳过已处理的行
+              } else {
+                currentSection.kvs.push({ key, value });
+              }
+            } else {
+              currentSection.kvs.push({ key, value });
+            }
+          } else if (currentItem) {
+            if (value === '' || value === undefined) {
+              // 这是一个子章节标题，如 methods:
+              currentSubKey = key;
+              currentSubItem = null;
+              if (!currentItem[key]) currentItem[key] = [];
+            } else if (currentSubItem && currentSubKey && indent > 4) {
+              // 子列表项的属性（缩进大于4，属于当前子项）
+              currentSubItem[key] = value;
+            } else {
+              // 普通键值对（属于顶级列表项）
+              currentItem[key] = value;
+              currentSubKey = null;
+              currentSubItem = null;
+            }
+          }
+        }
+      }
+      
+      return result;
+    }
+    
+    // 解析表格数据行，智能处理包含逗号的字段值
+    // 支持双引号包裹的字段值（引号内的逗号不作为分隔符）
+    function parseTableRow(line, fields) {
+      if (!fields || fields.length === 0) {
+        return line.split(',').map(p => p.trim());
+      }
+      
+      const fieldCount = fields.length;
+      const result = [];
+      let remaining = line.trim();
+      
+      // 从左到右解析字段
+      for (let i = 0; i < fieldCount; i++) {
+        remaining = remaining.trimStart();
+        
+        if (remaining === '') {
+          result.push('');
+          continue;
+        }
+        
+        // 检查是否以引号开头
+        if (remaining.startsWith('"')) {
+          // 查找闭合引号（跳过转义的引号）
+          let endQuoteIdx = -1;
+          for (let j = 1; j < remaining.length; j++) {
+            if (remaining[j] === '"' && remaining[j-1] !== '\\') {
+              endQuoteIdx = j;
+              break;
+            }
+          }
+          
+          if (endQuoteIdx > 0) {
+            // 提取引号内的内容
+            const value = remaining.substring(1, endQuoteIdx);
+            result.push(value);
+            // 跳过引号和后面的逗号
+            remaining = remaining.substring(endQuoteIdx + 1).trimStart();
+            if (remaining.startsWith(',')) {
+              remaining = remaining.substring(1);
+            }
+            continue;
+          }
+        }
+        
+        // 非引号包裹的字段
+        if (i < fieldCount - 1) {
+          // 非最后一个字段，按逗号分割
+          const commaIdx = remaining.indexOf(',');
+          if (commaIdx >= 0) {
+            result.push(remaining.substring(0, commaIdx).trim());
+            remaining = remaining.substring(commaIdx + 1);
+          } else {
+            result.push(remaining.trim());
+            remaining = '';
+          }
+        } else {
+          // 最后一个字段，取剩余全部内容
+          result.push(remaining.trim());
+          remaining = '';
+        }
+      }
+      
+      // 确保字段数量匹配
+      while (result.length < fieldCount) {
+        result.push('');
+      }
+      
+      return result;
+    }
+    
+    function renderToonFile(content) {
+      if (!content) return '<div class="empty-state"><div class="icon">⚠️</div><div class="text">内容加载失败</div></div>';
+      
+      const parsed = parseToon(content);
+      
+      // 【调试】输出完整解析结果
+      console.log('=== TOON 第一性原理调试 ===');
+      console.log('1. 原始内容长度:', content.length);
+      console.log('2. 解析后 sections 数量:', parsed.sections.length);
+      parsed.sections.forEach((s, i) => {
+        console.log(`   Section[${i}]: name="${s.name}", kvs=${s.kvs?.length || 0}, tables=${s.tables?.length || 0}, items=${s.items?.length || 0}`);
+        if (s.tables) {
+          s.tables.forEach((t, j) => {
+            console.log(`     Table[${j}]: name="${t.name}", fields=[${t.fields.join(',')}], items=${t.items.length}`);
+            if (t.items.length > 0) {
+              console.log(`       第一条数据:`, t.items[0]);
+            }
+          });
+        }
+      });
+      
+      // 检查解析结果是否有效（至少有一个表格包含数据）
+      const hasTableData = parsed.sections.some(s => 
+        s.tables && s.tables.some(t => t.items.length > 0)
+      );
+      const hasKvData = parsed.sections.some(s => s.kvs && s.kvs.length > 0);
+      const hasItemData = parsed.sections.some(s => s.items && s.items.length > 0);
+      
+      console.log('3. hasTableData:', hasTableData, 'hasKvData:', hasKvData, 'hasItemData:', hasItemData);
+      
+      // 如果解析失败或没有有效数据，显示原始内容
+      if (parsed.sections.length === 0 || (!hasTableData && !hasKvData && !hasItemData)) {
+        console.warn('[TOON] 解析结果为空，显示原始内容');
+        return `
+          <div class="card">
+            <div class="card-title"><span class="icon">📄</span>TOON 原始内容</div>
+            <pre class="code-preview"><code>${escapeHtml(content)}</code></pre>
+          </div>
+        `;
+      }
+      
+      let html = '<div class="toon-container">';
+      
+      // 头部信息
+      html += '<div class="toon-header">';
+      html += `<h3>📋 ${parsed.comments[0] || 'TOON 文档'}</h3>`;
+      if (parsed.comments.length > 1) {
+        html += '<div class="toon-meta">';
+        parsed.comments.slice(1).forEach(c => {
+          html += `<span>${escapeHtml(c)}</span>`;
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+      
+      // 各章节
+      parsed.sections.forEach((section, idx) => {
+        const isExpanded = true; // 默认全部展开
+        const tableCount = (section.tables || []).reduce((sum, t) => sum + t.items.length, 0);
+        const itemCount = section.items.filter(i => i._type !== 'subsection').length || section.kvs.length || tableCount;
+        
+        html += `<div class="toon-section ${isExpanded ? 'expanded' : ''}">`;
+        html += `<div class="toon-section-title" onclick="this.parentElement.classList.toggle('expanded')">`;
+        html += `${formatSectionName(section.name)}`;
+        if (itemCount > 0) {
+          html += `<span class="badge">${itemCount}</span>`;
+        }
+        html += '</div>';
+        html += '<div class="toon-section-content">';
+        
+        // 渲染键值对
+        if (section.kvs.length > 0) {
+          section.kvs.forEach(kv => {
+            if (kv.rawBlock) {
+              // 尝试解析嵌套的服务依赖结构为表格
+              const depHtml = renderNestedDependencies(kv.key, kv.rawBlock);
+              if (depHtml) {
+                html += depHtml;
+              } else {
+                // 检查是否是纯文本块（如 background: | 多行文本）
+                const blockText = kv.rawBlock.split('\n').map(l => l.trim()).filter(l => l).join(' ');
+                const looksLikeText = !kv.rawBlock.includes('{') && !kv.rawBlock.includes('[');
+                if (looksLikeText && blockText.length > 0) {
+                  html += `<div class="toon-kv">`;
+                  html += `<span class="toon-kv-key">${formatKey(kv.key)}</span>`;
+                  html += `<span class="toon-kv-value">${escapeHtml(blockText)}</span>`;
+                  html += '</div>';
+                } else {
+                  html += `<div class="toon-nested-block">`;
+                  html += `<div class="toon-nested-title">${formatKey(kv.key)}</div>`;
+                  html += `<pre class="toon-nested-content"><code>${escapeHtml(kv.rawBlock)}</code></pre>`;
+                  html += '</div>';
+                }
+              }
+            } else {
+              html += `<div class="toon-kv">`;
+              html += `<span class="toon-kv-key">${formatKey(kv.key)}</span>`;
+              html += `<span class="toon-kv-value">${formatValue(kv.key, kv.value)}</span>`;
+              html += '</div>';
+            }
+          });
+        }
+        
+        // 渲染表格式数据
+        if (section.tables && section.tables.length > 0) {
+          section.tables.forEach(table => {
+            html += renderToonTable(table);
+          });
+        }
+        
+        // 渲染混合格式（function_assignments 等）
+        if (section._mixed && section.items.length > 0) {
+          html += '<div class="toon-table-scroll"><table class="toon-table">';
+          html += '<thead><tr><th>功能ID</th><th>功能名称</th><th>服务</th><th>角色</th><th>动作</th><th>领域</th><th>流程环节</th></tr></thead>';
+          html += '<tbody>';
+          section.items.forEach(item => {
+            if (item._type === 'single') {
+              html += '<tr>';
+              html += `<td><span class="id-badge">${escapeHtml(item._id)}</span></td>`;
+              html += `<td>${escapeHtml(item._name)}</td>`;
+              html += `<td><code class="toon-code-class">${escapeHtml(item.service)}</code></td>`;
+              html += `<td><span class="toon-type-tag" style="background:#722ed120;color:#722ed1">${escapeHtml(item.role)}</span></td>`;
+              html += `<td>${escapeHtml(item.action)}</td>`;
+              html += `<td>${escapeHtml(item.domain)}</td>`;
+              html += `<td>${escapeHtml(item.workflow)}</td>`;
+              html += '</tr>';
+            } else if (item._type === 'multi') {
+              // 多服务分组：第一行显示功能ID和名称，合并单元格
+              const svcCount = item._services.length;
+              item._services.forEach((svc, si) => {
+                html += '<tr>';
+                if (si === 0) {
+                  html += `<td rowspan="${svcCount}"><span class="id-badge">${escapeHtml(item._id)}</span></td>`;
+                  html += `<td rowspan="${svcCount}">${escapeHtml(item._name)}</td>`;
+                }
+                html += `<td><code class="toon-code-class">${escapeHtml(svc.service)}</code></td>`;
+                html += `<td><span class="toon-type-tag" style="background:${svc.role === 'provider' ? '#52c41a20;color:#52c41a' : '#722ed120;color:#722ed1'}">${escapeHtml(svc.role)}</span></td>`;
+                html += `<td>${escapeHtml(svc.action)}</td>`;
+                html += `<td>${escapeHtml(svc.domain)}</td>`;
+                html += `<td>${escapeHtml(svc.workflow)}</td>`;
+                html += '</tr>';
+              });
+            }
+          });
+          html += '</tbody></table></div>';
+        }
+        // 渲染列表项（包括子章节分隔）
+        else if (section.items.length > 0) {
+          let inList = false;
+          section.items.forEach(item => {
+            if (item._type === 'subsection') {
+              if (inList) { html += '</ul>'; inList = false; }
+              html += `<div class="toon-subsection-title">${escapeHtml(item._title)}</div>`;
+            } else {
+              if (!inList) { html += '<ul class="toon-list">'; inList = true; }
+              html += renderToonItem(item, section.name);
+            }
+          });
+          if (inList) html += '</ul>';
+        }
+        
+        html += '</div></div>';
+      });
+      
+      html += '</div>';
+      return html;
+    }
+    
+    // 解析嵌套结构为HTML
+    // 格式1: service_name:\n  dubbo[N]{fields}:\n    data_row1\n    data_row2
+    // 格式2: - key1:value1\n  key2:value2\n  key3:value3 (YAML列表)
+    function renderNestedDependencies(key, rawBlock) {
+      const lines = rawBlock.split('\n').filter(l => l.trim());
+      if (lines.length === 0) return null;
+      
+      // 检查是否是 YAML 列表格式（以 - 开头的列表项）
+      const hasYamlList = lines.some(l => l.trim().startsWith('- '));
+      if (hasYamlList) {
+        return renderYamlListAsCards(key, rawBlock);
+      }
+      
+      // 检查是否包含 dubbo[ 或类似表格定义
+      const hasDubboTable = lines.some(l => l.trim().match(/^\w+\[\d+\]\{[^}]+\}:$/));
+      if (!hasDubboTable) return null;
+      
+      let html = `<div class="toon-table-wrapper">`;
+      html += `<div class="toon-table-title">${formatKey(key)}</div>`;
+      html += '<div class="toon-table-scroll"><table class="toon-table">';
+      
+      let currentTarget = '';
+      let fields = [];
+      let hasHeader = false;
+      
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        
+        // 目标服务名行: asp-storage-service:
+        const targetMatch = trimmed.match(/^([\w\-\.]+):$/);
+        if (targetMatch && !trimmed.match(/^\w+\[/)) {
+          currentTarget = targetMatch[1];
+          return;
+        }
+        
+        // 表格定义行: dubbo[1]{caller_class,target_interfaces}:
+        const tableDefMatch = trimmed.match(/^\w+\[(\d+)\]\{([^}]+)\}:$/);
+        if (tableDefMatch) {
+          fields = tableDefMatch[2].split(',').map(f => f.trim());
+          if (!hasHeader) {
+            html += '<thead><tr><th>目标服务</th>';
+            fields.forEach(f => { html += `<th>${formatKey(f)}</th>`; });
+            html += '</tr></thead><tbody>';
+            hasHeader = true;
+          }
+          return;
+        }
+        
+        // 数据行
+        if (fields.length > 0 && !trimmed.startsWith('#')) {
+          const values = trimmed.split(',').map(v => v.trim());
+          html += '<tr>';
+          html += `<td><code class="toon-code-class">${escapeHtml(currentTarget)}</code></td>`;
+          fields.forEach((f, idx) => {
+            const val = values[idx] || '';
+            if (val.includes('|')) {
+              html += `<td>${val.split('|').map(v => `<code class="toon-code-method">${escapeHtml(v.trim())}</code>`).join(' ')}</td>`;
+            } else {
+              html += `<td>${escapeHtml(val)}</td>`;
+            }
+          });
+          html += '</tr>';
+        }
+      });
+      
+      if (!hasHeader) return null;
+      html += '</tbody></table></div></div>';
+      return html;
+    }
+    
+    // 渲染嵌套结构为HTML（通用，不含硬编码业务标识）
+    // 支持三种格式:
+    // 1. YAML列表: - key1:value1\n  key2:value2
+    // 2. 纯文本列表: - 文本内容1\n- 文本内容2
+    // 3. 纯键值对: key1:value1\nkey2:value2
+    function renderYamlListAsCards(key, rawBlock) {
+      const lines = rawBlock.split('\n');
+      const items = [];
+      let currentItem = null;
+      let isSimpleList = false; // 纯文本列表
+      let isKvBlock = false; // 纯键值对块
+      
+      // 先判断类型
+      const hasListItem = lines.some(l => l.trim().startsWith('- '));
+      if (!hasListItem) {
+        // 纯键值对块
+        isKvBlock = true;
+      } else {
+        // 检查是否是纯文本列表（- 后面不含冒号）
+        const listLines = lines.filter(l => l.trim().startsWith('- '));
+        isSimpleList = listLines.every(l => {
+          const content = l.trim().substring(2);
+          return !content.includes(':') || content.indexOf(':') > 20; // 冒号在很后面，可能是描述文本
+        });
+      }
+      
+      if (isKvBlock) {
+        // 渲染为键值对表格
+        let html = '<div class="toon-yaml-list">';
+        html += `<div class="toon-yaml-list-title">${formatKey(key)}</div>`;
+        html += '<div class="toon-list-item-body">';
+        lines.forEach(line => {
+          const trimmed = line.trim();
+          if (!trimmed) return;
+          const colonIdx = trimmed.indexOf(':');
+          if (colonIdx > 0) {
+            const k = trimmed.substring(0, colonIdx).trim();
+            const v = trimmed.substring(colonIdx + 1).trim();
+            html += `<div class="toon-kv">`;
+            html += `<span class="toon-kv-key">${formatKey(k)}</span>`;
+            html += `<span class="toon-kv-value">${formatValue(k, v)}</span>`;
+            html += '</div>';
+          }
+        });
+        html += '</div></div>';
+        return html;
+      }
+      
+      if (isSimpleList) {
+        // 渲染为简单文本列表
+        let html = '<div class="toon-yaml-list">';
+        const textItems = lines.filter(l => l.trim().startsWith('- ')).map(l => l.trim().substring(2));
+        html += `<div class="toon-yaml-list-title">${formatKey(key)} <span class="badge">${textItems.length}</span></div>`;
+        html += '<ul class="toon-simple-list">';
+        textItems.forEach(text => {
+          html += `<li class="toon-simple-list-item">${escapeHtml(text)}</li>`;
+        });
+        html += '</ul></div>';
+        return html;
+      }
+      
+      // YAML 列表（- key:value 格式）
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        
+        if (trimmed.startsWith('- ')) {
+          // 新列表项开始
+          if (currentItem) items.push(currentItem);
+          currentItem = {};
+          const content = trimmed.substring(2);
+          const colonIdx = content.indexOf(':');
+          if (colonIdx > 0) {
+            const k = content.substring(0, colonIdx).trim();
+            const v = content.substring(colonIdx + 1).trim();
+            currentItem[k] = v;
+          }
+        } else if (currentItem) {
+          // 继续当前列表项的属性
+          const colonIdx = trimmed.indexOf(':');
+          if (colonIdx > 0) {
+            const k = trimmed.substring(0, colonIdx).trim();
+            const v = trimmed.substring(colonIdx + 1).trim();
+            currentItem[k] = v;
+          }
+        }
+      });
+      if (currentItem) items.push(currentItem);
+      
+      if (items.length === 0) return null;
+      
+      let html = '<div class="toon-yaml-list">';
+      html += `<div class="toon-yaml-list-title">${formatKey(key)} <span class="badge">${items.length}</span></div>`;
+      html += '<ul class="toon-list">';
+      
+      items.forEach(item => {
+        html += '<li class="toon-list-item">';
+        html += '<div class="toon-list-item-header">';
+        // 获取第一个属性作为标题
+        const keys = Object.keys(item);
+        if (keys.length > 0) {
+          html += `<span class="id-badge">${escapeHtml(keys[0])}</span>`;
+          html += `<span class="name">${escapeHtml(item[keys[0]])}</span>`;
+        }
+        html += '</div>';
+        html += '<div class="toon-list-item-body">';
+        // 渲染其他属性
+        keys.slice(1).forEach(k => {
+          html += `<div class="toon-kv">`;
+          html += `<span class="toon-kv-key">${formatKey(k)}</span>`;
+          html += `<span class="toon-kv-value">${formatValue(k, item[k])}</span>`;
+          html += '</div>';
+        });
+        html += '</div></li>';
+      });
+      
+      html += '</ul></div>';
+      return html;
+    }
+    
+    // 渲染表格式数据
+    function renderToonTable(table) {
+      let html = `<div class="toon-table-wrapper">`;
+      html += `<div class="toon-table-title">${formatTableName(table.name)} <span class="badge">${table.items.length}</span></div>`;
+      
+      if (table.items.length === 0) {
+        html += '<div class="toon-empty">暂无数据</div>';
+      } else {
+        html += '<div class="toon-table-scroll"><table class="toon-table">';
+        // 表头
+        html += '<thead><tr>';
+        table.fields.forEach(field => {
+          html += `<th>${formatKey(field)}</th>`;
+        });
+        html += '</tr></thead>';
+        // 表体
+        html += '<tbody>';
+        table.items.forEach(row => {
+          html += '<tr>';
+          table.fields.forEach(field => {
+            const val = row[field] || '';
+            html += `<td>${formatTableCell(field, val)}</td>`;
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+      }
+      html += '</div>';
+      return html;
+    }
+    
+    function formatTableName(name) {
+      const labels = {
+        'interfaces': '🔌 接口列表',
+        'provider_classes': '📦 Provider 类',
+        'service_classes': '🔧 Service 类',
+        'gateway_classes': '🌐 Gateway 类',
+        'methods': '📝 方法列表',
+        'core_framework': '🛠️ 核心框架',
+        'request_dtos': '📥 请求对象',
+        'response_dtos': '📤 响应对象',
+        'method_calls': '🔗 方法调用链',
+        'dubbo_dependencies': '🔌 Dubbo 依赖',
+        'mq_consumers': '📨 MQ 消费者',
+        'mq_producers': '📤 MQ 生产者',
+        'redis_usage': '💾 Redis 使用',
+        'internal_services': '🏠 内部服务',
+        'gateway_dependencies': '🌐 Gateway 依赖',
+        'enums': '📋 枚举类',
+        'scheduled_tasks': '⏰ 定时任务',
+        'tables': '🗄️ 数据库表',
+        'fields': '📝 字段列表',
+        'conflicts': '⚠️ 冲突问题',
+        'code_evidence': '📌 代码证据',
+        // 原子功能 TOON 表格
+        'USER_PAIN_POINTS': '😣 用户痛点',
+        'RELATED_SYSTEMS': '🔗 关联系统',
+        'HIGH_RISK_ITEMS': '⚠️ 高危项',
+        'MODULES': '📦 功能模块',
+        'FUNCTIONS': '⚡ 原子功能',
+        'BUSINESS_RULES': '📏 业务规则',
+        'RISKS': '⚠️ 风险项',
+        'QUESTIONS': '❓ 待澄清问题',
+        'GLOSSARY': '📖 术语表',
+        'DATA_ENTITIES': '🗃️ 数据实体',
+        'BUSINESS_FLOWS': '🔄 业务流程',
+        'EXTERNAL_INTERFACES': '🌐 外部接口',
+        'PRD_MAPPING': '🔗 PRD映射'
+      };
+      return labels[name] || name;
+    }
+    
+    function formatTableCell(field, value) {
+      if (!value || value === '-' || value === '[冲突:未发现]') {
+        return '<span style="color:#bfbfbf">-</span>';
+      }
+      
+      // 文件路径
+      if (field === 'file_path' || field === 'implementation') {
+        if (value.includes('.java')) {
+          return `<code class="toon-code-path">${escapeHtml(value)}</code>`;
+        }
+        return escapeHtml(value);
+      }
+      
+      // 类名
+      if (field === 'class_name' || field === 'interface_implementation' || field === 'dto_name' || field === 'enum_name') {
+        return `<code class="toon-code-class">${escapeHtml(value)}</code>`;
+      }
+      
+      // 包路径
+      if (field === 'package') {
+        return `<span style="color:#8c8c8c;font-size:11px">${escapeHtml(value)}</span>`;
+      }
+      
+      // 方法列表（逗号分隔）- 直接显示全部
+      if (field === 'methods' || field === 'called_methods') {
+        const methods = value.split(',').map(m => m.trim()).filter(Boolean);
+        return methods.map(m => `<code class="toon-code-method">${escapeHtml(m)}</code>`).join(' ');
+      }
+      
+      // 数字
+      if (field === 'line' || field === 'line_number' || field === 'methods_count') {
+        return `<span style="color:#1890ff">${escapeHtml(value)}</span>`;
+      }
+      
+      // 类型标签
+      if (field === 'interface_type' || field === 'rw_type' || field === 'severity') {
+        const colors = {
+          'dubbo': '#722ed1', 'http': '#1890ff', 'mq': '#52c41a',
+          'read': '#52c41a', 'write': '#ff4d4f', 'read_write': '#faad14',
+          'HIGH': '#ff4d4f', 'MEDIUM': '#faad14', 'LOW': '#52c41a'
+        };
+        const color = colors[value] || '#8c8c8c';
+        return `<span class="toon-type-tag" style="background:${color}20;color:${color}">${escapeHtml(value)}</span>`;
+      }
+      
+      return escapeHtml(value);
+    }
+    
+    // 通用 TOON 列表项渲染器 - 不包含任何硬编码的业务标识
+    function renderToonItem(item, sectionName) {
+      let html = '<li class="toon-list-item">';
+      
+      // 头部：显示 _id 和 _value
+      html += '<div class="toon-list-item-header">';
+      if (item._id) {
+        html += `<span class="id-badge">${escapeHtml(item._id)}</span>`;
+        html += `<span class="name">${escapeHtml(item._value || '')}</span>`;
+      }
+      html += '</div>';
+      
+      // 主体内容
+      html += '<div class="toon-list-item-body">';
+      
+      // 渲染所有普通属性（排除内部字段和数组）
+      const skipKeys = ['_id', '_value', '_children'];
+      Object.keys(item).forEach(key => {
+        if (skipKeys.includes(key)) return;
+        const val = item[key];
+        if (Array.isArray(val)) return; // 子列表单独处理
+        html += `<div class="toon-kv">`;
+        html += `<span class="toon-kv-key">${formatKey(key)}</span>`;
+        html += `<span class="toon-kv-value">${formatValue(key, val)}</span>`;
+        html += '</div>';
+      });
+      
+      // 渲染 _children
+      if (item._children && item._children.length > 0) {
+        item._children.forEach(child => {
+          html += `<div class="toon-kv">`;
+          html += `<span class="toon-kv-key">${formatKey(child.key)}</span>`;
+          html += `<span class="toon-kv-value">${formatValue(child.key, child.value)}</span>`;
+          html += '</div>';
+        });
+      }
+      
+      // 通用渲染所有数组类型的子列表
+      Object.keys(item).forEach(key => {
+        if (skipKeys.includes(key)) return;
+        const val = item[key];
+        if (!Array.isArray(val) || val.length === 0) return;
+        
+        html += '<div class="toon-methods">';
+        html += `<div class="toon-methods-title">${formatKey(key)} (${val.length})</div>`;
+        val.forEach(subItem => {
+          html += '<div class="toon-method">';
+          // 获取第一个非空属性作为标题
+          const firstKey = Object.keys(subItem).find(k => subItem[k] && !k.startsWith('_'));
+          if (firstKey) {
+            html += `<div class="toon-method-name">${escapeHtml(subItem[firstKey])}</div>`;
+          }
+          // 渲染其他属性
+          html += '<div class="toon-method-meta">';
+          const metaParts = [];
+          Object.keys(subItem).forEach(k => {
+            if (k === firstKey) return;
+            const v = subItem[k];
+            if (v && v !== '-') {
+              metaParts.push(`${formatKey(k)}: ${escapeHtml(v)}`);
+            }
+          });
+          html += metaParts.join(' | ');
+          html += '</div></div>';
+        });
+        html += '</div>';
+      });
+      
+      html += '</div></li>';
+      return html;
+    }
+    
+    function formatSectionName(name) {
+      const icons = {
+        'META': '📋 元数据',
+        'METADATA': '📋 元数据',
+        'PRD_CONTEXT': '📄 PRD上下文',
+        'MODULES': '📦 功能模块',
+        'FUNCTIONS': '⚡ 原子功能',
+        'BUSINESS_RULES': '📏 业务规则',
+        'RISKS': '⚠️ 风险项',
+        'QUESTIONS': '❓ 待澄清问题',
+        'DOMAIN_CONTEXT': '🏷️ 领域上下文',
+        'PRD_MAPPING': '🔗 PRD映射',
+        'INTERFACES_COUNT': '📊 接口统计',
+        'INTERFACE_LIST': '🔌 接口列表',
+        'ERROR_CODES': '⚠️ 错误码',
+        'TASK_ANCHORS': '🎯 任务锚点',
+        'DEMO_PACKAGE_MODIFICATIONS': '📦 样机包修改',
+        'SCHEDULED_TASKS': '⏰ 定时任务',
+        'EXTERNAL_DEPENDENCIES': '🔗 外部依赖',
+        'ISSUES_AND_CONFLICTS': '❗ 问题与冲突',
+        'CODE_INDEX': '📁 代码索引',
+        'FILE_LIST': '📄 文件列表',
+        'CHAPTER_1_PROJECT_OVERVIEW': '📋 第1章 项目概览',
+        'CHAPTER_2_TECH_STACK': '🛠️ 第2章 技术栈',
+        'CHAPTER_3_INTERFACES': '🔌 第3章 接口列表',
+        'CHAPTER_4_CLASSES': '📦 第4章 类索引',
+        'CHAPTER_5_METHODS': '📝 第5章 方法详情',
+        'CHAPTER_6_DTO_CLASSES': '📥 第6章 DTO类',
+        'CHAPTER_7_CALL_GRAPH': '🔗 第7章 调用链',
+        'CHAPTER_8_EXTERNAL_SYSTEMS': '🌐 第8章 外部系统',
+        'CHAPTER_9_SERVICE_DEPS': '🏠 第9章 服务依赖',
+        'CHAPTER_10_ENUMS': '📋 第10章 枚举类',
+        'CHAPTER_11_SCHEDULED_TASKS': '⏰ 第11章 定时任务',
+        'CHAPTER_12_MQ_PRODUCERS': '📤 第12章 MQ生产者',
+        'CHAPTER_13_TABLES': '🗄️ 第13章 数据库表',
+        'CHAPTER_14_CONFLICTS_AND_ISSUES': '⚠️ 第14章 冲突问题',
+        'CHAPTER_15_EVIDENCE': '📌 第15章 代码证据',
+        'CHAPTER_17_EXECUTIVE_SUMMARY': '📊 第17章 执行摘要',
+        'metadata': '📋 元数据',
+        'function_assignments': '📦 功能分配',
+        'FUNCTION_ASSIGNMENTS': '📦 功能分配',
+        'SERVICE_DECISION': '🔀 服务决策',
+        'WORKFLOW_ANALYSIS': '📊 工作流分析',
+        'CHAPTER_1_CONTEXT': '📄 第1章 上下文',
+        'CHAPTER_2_SERVICE_DEPS': '🔗 第2章 服务依赖',
+        'CHAPTER_3_DATA': '🗄️ 第3章 数据实体',
+        'CHAPTER_4_BUSINESS_RULES': '📏 第4章 业务规则',
+        'CHAPTER_5_FLOWS': '🔄 第5章 业务流程',
+        'CHAPTER_6_RISKS': '⚠️ 第6章 风险与待确认',
+        'services': '📦 服务列表',
+        'service_dependencies': '🔗 服务依赖',
+        'functions': '⚡ 功能列表',
+        'interfaces': '🔌 接口列表',
+        'external_dependencies': '🌐 外部依赖',
+        'core_framework': '🛠️ 核心框架',
+        'provider_classes': '📦 Provider类',
+        'service_classes': '📦 Service类',
+        'gateway_classes': '🔗 Gateway类',
+        'USER_PAIN_POINTS': '👤 用户痛点',
+        'RELATED_SYSTEMS': '🔗 关联系统',
+        'HIGH_RISK_ITEMS': '⚠️ 高危项'
+      };
+      return icons[name] || name;
+    }
+    
+    function formatKey(key) {
+      const labels = {
+        'manifest_version': '清单版本',
+        'generation_time': '生成时间',
+        'task': '任务',
+        'author': '作者',
+        'total_interfaces': '接口总数',
+        'total_methods': '方法总数',
+        'demo_package_related_methods': '样机包相关方法',
+        'new_methods': '新增方法',
+        'class_name': '类名',
+        'package': '包路径',
+        'file_path': '文件路径',
+        'line_number': '行号',
+        'line': '行号',
+        'methods_count': '方法数',
+        'request_type': '请求类型',
+        'response_type': '响应类型',
+        'return_type': '返回类型',
+        'task_anchor': '任务锚点',
+        'detail_file': '详情文件',
+        'http_status': 'HTTP状态',
+        'related_interfaces': '关联接口',
+        'interfaces': '接口',
+        'scheduler': '调度器',
+        'cron': 'Cron表达式',
+        'system': '系统',
+        'interface': '接口',
+        'group': '分组',
+        'importance': '重要性',
+        'table': '表名',
+        'field': '字段',
+        'type': '类型',
+        'dto': 'DTO',
+        'fields': '字段',
+        'method': '方法',
+        'method_name': '方法名',
+        'item': '项目',
+        'severity': '严重程度',
+        'impact': '影响',
+        'recommendation': '建议',
+        'project_name': '项目名称',
+        'module': '模块',
+        'framework': '框架',
+        'name': '名称',
+        'version': '版本',
+        'usage': '用途',
+        'interface_id': '接口ID',
+        'interface_type': '接口类型',
+        'interface_implementation': '实现类',
+        'methods': '方法',
+        'rw_type': '读写类型',
+        'description': '描述',
+        'signature': '签名',
+        'dto_name': 'DTO名称',
+        'called_methods': '调用方法',
+        'system_name': '系统名称',
+        'consumer_name': '消费者名称',
+        'producer_name': '生产者名称',
+        'topic': 'Topic',
+        'implementation': '实现',
+        'service_name': '服务名称',
+        'dependency_type': '依赖类型',
+        'dependent_by': '被依赖',
+        'gateway_name': 'Gateway名称',
+        'external_system': '外部系统',
+        'enum_name': '枚举名',
+        'values_count': '值数量',
+        'task_name': '任务名称',
+        'trigger': '触发器',
+        'interval': '间隔',
+        'table_name': '表名',
+        'entity_class': '实体类',
+        'mapper': 'Mapper',
+        'gateway': 'Gateway',
+        'field_name': '字段名',
+        'evidence_id': '证据ID',
+        'context': '上下文',
+        'location': '位置',
+        'func_id': '功能ID',
+        'func_name': '功能名称',
+        'domain': '领域',
+        'workflow_step': '工作流环节',
+        'decision_basis': '决策依据',
+        'decision_mode': '决策模式',
+        'total_functions': '功能总数',
+        'total_services': '服务总数',
+        'generated_at': '生成时间',
+        'generated_by': '生成者',
+        'layer': '层级',
+        'priority': '优先级',
+        'acceptance_criteria': '验收标准',
+        'prd_evidence': 'PRD依据',
+        'related_interfaces': '关联接口',
+        'interface_name': '接口名称',
+        'service': '服务',
+        '服务名称': '服务名称',
+        'service_name': '服务名称',
+        'role': '角色',
+        'caller_service': '调用方',
+        'callee_service': '被调用方',
+        'functions': '功能列表',
+        'interfaces': '接口列表',
+        'core_framework': '核心框架',
+        'provider_classes': 'Provider类',
+        'service_classes': 'Service类',
+        'gateway_classes': 'Gateway类',
+        'interface_implementation': '实现类',
+        'total_modules': '模块总数',
+        'total_entities': '实体总数',
+        'total_flows': '流程总数',
+        'prd_source': 'PRD来源',
+        'prd_extracted_at': 'PRD提取时间',
+        'purpose': '用途',
+        'BACKGROUND': '背景',
+        'scenario': '场景',
+        'severity': '严重程度',
+        'expectation': '期望',
+        'relationship': '关系',
+        'interface_desc': '接口描述',
+        'owner': '负责人',
+        'risk_item': '风险项',
+        'risk_desc': '风险描述',
+        'mitigation': '缓解措施',
+        'module_id': '模块ID',
+        'module_name': '模块名称',
+        'prd_section': 'PRD章节',
+        'func_count': '功能数',
+        'core_value': '核心价值',
+        'edge_cases': '边界情况',
+        'confidence': '置信度',
+        'rule_id': '规则ID',
+        'rule_desc': '规则描述',
+        'risk_id': '风险ID',
+        'risk_type': '风险类型',
+        'question_id': '问题ID',
+        'question_type': '问题类型',
+        'question': '问题',
+        'system': '系统',
+        'term': '术语',
+        'definition': '定义',
+        'category': '分类',
+        'source': '来源',
+        'direction': '调用方向',
+        'timing': '调用时机',
+        'request_data': '请求数据',
+        'response_data': '响应数据',
+        'entity_id': '实体ID',
+        'entity_name': '实体名称',
+        'entity_type': '实体类型',
+        'lifecycle_states': '生命周期状态',
+        'key_fields': '关键字段',
+        'owner_hint': '归属提示',
+        'flow_id': '流程ID',
+        'flow_name': '流程名称',
+        'trigger': '触发条件',
+        'steps': '步骤',
+        'involved_systems': '涉及系统',
+        'prd_ref': 'PRD引用',
+        'func_ids': '关联功能',
+        'relation_count': '关联数',
+        'total_relations': '关联总数',
+        'prd_related_domains': '关联领域',
+        'background': '背景',
+        'service_steps': '服务步骤',
+        'dependency': '依赖方向',
+        'responsibility': '职责',
+        'target_system': '目标系统',
+        'caller_class': '调用类',
+        'ext_interfaces': '外部接口',
+        'target_interfaces': '目标接口'
+      };
+      return labels[key] || key;
+    }
+    
+    function formatValue(key, value) {
+      if (!value || value === '-') return '<span style="color:#bfbfbf">-</span>';
+      
+      // 文件路径高亮
+      if (key === 'file_path' || key === 'detail_file') {
+        if (value.startsWith('[')) return `<span style="color:#bfbfbf">${escapeHtml(value)}</span>`;
+        return `<code style="background:#f5f5f5;padding:2px 6px;border-radius:3px;font-size:11px">${escapeHtml(value)}</code>`;
+      }
+      
+      // 类名/包名
+      if (key === 'class_name' || key === 'package') {
+        return `<code style="color:#722ed1;font-size:11px">${escapeHtml(value)}</code>`;
+      }
+      
+      // 布尔值
+      if (value === '✓') return '<span style="color:#52c41a">✓ 是</span>';
+      if (value === '✗') return '<span style="color:#bfbfbf">✗ 否</span>';
+      
+      return escapeHtml(value);
+    }
+    
+    // ==================== 表格增强 ====================
+    let tableIdCounter = 0;
+    function enhanceTables() {
+      document.querySelectorAll('.markdown-body table').forEach(table => {
+        if (table.dataset.enhanced) return;
+        table.dataset.enhanced = 'true';
+        
+        const thead = table.querySelector('thead');
+        const tbody = table.querySelector('tbody');
+        if (!thead || !tbody) return;
+        
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        if (rows.length < 5) return;
+        
+        const tableId = 'table-' + (++tableIdCounter);
+        table.id = tableId;
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'filterable-table-wrapper';
+        
+        const filterRow = document.createElement('div');
+        filterRow.className = 'table-filter-row';
+        filterRow.innerHTML = `
+          <span class="table-filter-label">🔍 筛选:</span>
+          <input type="text" class="table-filter-input" placeholder="输入关键词..." data-table="${tableId}">
+          <button class="table-filter-clear" data-table="${tableId}">清除</button>
+          <span class="table-filter-count" data-table="${tableId}">共 ${rows.length} 行</span>
+        `;
+        
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(filterRow);
+        wrapper.appendChild(table);
+        
+        const input = filterRow.querySelector('.table-filter-input');
+        const clearBtn = filterRow.querySelector('.table-filter-clear');
+        const countSpan = filterRow.querySelector('.table-filter-count');
+        
+        input.addEventListener('input', () => {
+          const keyword = input.value.toLowerCase().trim();
+          let visibleCount = 0;
+          
+          rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            if (!keyword || text.includes(keyword)) {
+              row.classList.remove('table-row-hidden');
+              visibleCount++;
+            } else {
+              row.classList.add('table-row-hidden');
+            }
+          });
+          
+          countSpan.textContent = keyword ? `显示 ${visibleCount}/${rows.length} 行` : `共 ${rows.length} 行`;
+        });
+        
+        clearBtn.addEventListener('click', () => {
+          input.value = '';
+          rows.forEach(row => row.classList.remove('table-row-hidden'));
+          countSpan.textContent = `共 ${rows.length} 行`;
+        });
+      });
+    }
+    
+    // ==================== 初始化 ====================
+    document.addEventListener('DOMContentLoaded', async () => {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose',
+        flowchart: { useMaxWidth: true, htmlLabels: true }
+      });
+      
+      // 加载状态文件
+      await loadHubStatus();
+      
+      // 检测阶段
+      await detectPhases();
+      
+      if (detectedPhases.length === 0) {
+        document.getElementById('main-container').innerHTML = `
+          <div class="empty-state" style="width:100%;height:100%">
+            <div class="icon">📭</div>
+            <div class="text">未检测到任何开发阶段产物</div>
+            <div style="margin-top:20px;font-size:12px;color:#8c8c8c;max-width:400px;text-align:center;">
+              请确保此页面位于正确的目录：<br><br>
+              <b>Hub仓：</b> docs/ 目录下应包含 P01_xxx, P02_xxx 等文件夹<br>
+              <b>服务仓：</b> 当前目录应包含 S01_xxx, S02_xxx 等文件夹
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      // 生成UI
+      generateNavTabs();
+      generateTabContents();
+      
+      // 初始化第一个 tab
+      switchTab(getTabFromHash());
+      
+      // 初始化资产对比查看器
+      AssetViewer.init();
+    });
+    
+    // ==================== 资产对比查看器 ====================
+    const AssetViewer = {
+      overlay: null,
+      imageContainer: null,
+      mdContainer: null,
+      titleEl: null,
+      subtitleEl: null,
+
+      init() {
+        const html = `
+          <div class="asset-viewer-overlay" id="assetViewerOverlay">
+            <div class="asset-viewer-modal">
+              <div class="asset-viewer-header">
+                <div class="asset-viewer-title">
+                  <div class="title-icon">🔍</div>
+                  <div class="title-text">
+                    <div class="title-main" id="assetViewerTitle">资产解析对比</div>
+                    <div class="title-sub" id="assetViewerSubtitle">图片路径</div>
+                  </div>
+                </div>
+                <button class="asset-viewer-btn close" id="assetViewerClose" title="关闭">✕</button>
+              </div>
+              <div class="asset-viewer-body">
+                <div class="asset-viewer-left">
+                  <div class="asset-viewer-panel-header">
+                    <span class="panel-title">🖼️ 原始图片</span>
+                    <span class="panel-badge">SOURCE</span>
+                  </div>
+                  <div class="asset-viewer-image-container" id="assetViewerImage"></div>
+                </div>
+                <div class="asset-viewer-right">
+                  <div class="asset-viewer-panel-header">
+                    <span class="panel-title">📝 AI 解析结果</span>
+                    <span class="panel-badge">ANALYSIS</span>
+                  </div>
+                  <div class="asset-viewer-md-container" id="assetViewerMd"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', html);
+
+        this.overlay = document.getElementById('assetViewerOverlay');
+        this.imageContainer = document.getElementById('assetViewerImage');
+        this.mdContainer = document.getElementById('assetViewerMd');
+        this.titleEl = document.getElementById('assetViewerTitle');
+        this.subtitleEl = document.getElementById('assetViewerSubtitle');
+
+        document.getElementById('assetViewerClose').addEventListener('click', () => this.close());
+        this.overlay.addEventListener('click', (e) => { if (e.target === this.overlay) this.close(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.overlay.classList.contains('active')) this.close(); });
+      },
+
+      async open(imageUrl, mdUrl) {
+        this.subtitleEl.textContent = imageUrl;
+        this.overlay.classList.add('active');
+
+        this.imageContainer.innerHTML = '<div class="image-placeholder"><div class="placeholder-icon">🖼️</div><div>加载图片中...</div></div>';
+        this.mdContainer.innerHTML = '<div class="asset-viewer-loading"><div class="spinner"></div><div>加载解析结果...</div></div>';
+
+        await Promise.all([this.loadImage(imageUrl), this.loadMd(mdUrl)]);
+      },
+
+      async loadImage(url) {
+        try {
+          const img = new Image();
+          img.src = url;
+          await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; });
+          this.imageContainer.innerHTML = '';
+          this.imageContainer.appendChild(img);
+        } catch (e) {
+          this.imageContainer.innerHTML = '<div class="image-placeholder"><div class="placeholder-icon">❌</div><div style="color:#ef4444;">图片加载失败</div></div>';
+        }
+      },
+
+      async loadMd(url) {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error('文件加载失败');
+          const content = await response.text();
+          this.mdContainer.innerHTML = '<div class="markdown-body">' + marked.parse(content) + '</div>';
+        } catch (e) {
+          this.mdContainer.innerHTML = '<div class="asset-viewer-error"><div style="font-size:40px;margin-bottom:12px;">❌</div><div>加载失败</div></div>';
+        }
+      },
+
+      close() {
+        this.overlay.classList.remove('active');
+      }
+    };
+
+    window.openAssetViewer = function(imageUrl, mdUrl) {
+      AssetViewer.open(imageUrl, mdUrl);
+    };
+
+    // 增强资产汇总表格：将"查看"链接转换为按钮
+    function enhanceAssetTable(container) {
+      container.querySelectorAll('table').forEach(table => {
+        const headers = table.querySelectorAll('th');
+        let imageColIdx = -1, resultColIdx = -1;
+        headers.forEach((th, idx) => {
+          const text = th.textContent.trim();
+          if (text === '图片') imageColIdx = idx;
+          if (text === '结果文件') resultColIdx = idx;
+        });
+        if (imageColIdx === -1 || resultColIdx === -1) return;
+
+        // 修改表头：将"结果文件"改为"操作"并移到最后
+        const headerRow = table.querySelector('thead tr') || table.querySelector('tr');
+        if (headerRow) {
+          const resultTh = headerRow.children[resultColIdx];
+          if (resultTh) {
+            resultTh.textContent = '操作';
+            headerRow.appendChild(resultTh);
+          }
+        }
+
+        // 处理每一行
+        table.querySelectorAll('tbody tr, tr:not(:first-child)').forEach(row => {
+          const cells = row.querySelectorAll('td');
+          if (cells.length <= Math.max(imageColIdx, resultColIdx)) return;
+
+          const imageCell = cells[imageColIdx];
+          const resultCell = cells[resultColIdx];
+
+          const imageCode = imageCell.querySelector('code');
+          const imagePath = imageCode ? imageCode.textContent.trim() : '';
+          
+          // 从 onclick 属性中提取 MD 路径（因为 renderMarkdown 已经转换了链接）
+          const mdLink = resultCell.querySelector('a');
+          let mdHref = '';
+          if (mdLink) {
+            const onclick = mdLink.getAttribute('onclick') || '';
+            const match = onclick.match(/navigateToFile\('([^']+)'\)/);
+            if (match) {
+              mdHref = match[1];
+            }
+          }
+
+          if (imagePath && mdHref) {
+            // 从 MD 路径推断图片完整路径
+            // mdHref: P01_req_intake/assets_analysis/xxx.md
+            // imagePath: source_export/static/xxx.png
+            const mdBasePath = mdHref.substring(0, mdHref.indexOf('assets_analysis/'));
+            const fullImagePath = mdBasePath + imagePath;
+
+            // 检查 MD 文件是否存在
+            fetch(mdHref, { method: 'HEAD' }).then(res => {
+              if (res.ok) {
+                resultCell.innerHTML = `<span style="color:#10b981;margin-right:8px;">✓</span><button onclick="openAssetViewer('${fullImagePath}', '${mdHref}')" style="padding:4px 12px;font-size:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;">🔍 查看</button>`;
+              } else {
+                resultCell.innerHTML = '<span style="color:#ef4444;">✗</span>';
+              }
+            }).catch(() => {
+              resultCell.innerHTML = '<span style="color:#ef4444;">✗</span>';
+            });
+
+            row.appendChild(resultCell);
+          }
+        });
+      });
+    }
+
+  </script>
+</body>
+</html>
